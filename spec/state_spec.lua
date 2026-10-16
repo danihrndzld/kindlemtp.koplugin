@@ -93,6 +93,16 @@ describe("start", function()
         assert.are.equal("plugin", Mtp.parse_marker(e.contents[Mtp.MARKER]).owner)
     end)
 
+    it("DT-R58 marker present but lipc unreadable: no_lipc, marker kept, nothing sent", function()
+        local core, e = F.core(function(e)
+            marker(e, "kobridge")
+            e.lipc_dead = true
+        end)
+        assert.are.same({ nil, "no_lipc" }, { core:start() })
+        assert.are.equal("kobridge", Mtp.parse_marker(e.contents[Mtp.MARKER]).owner)
+        assert.are.same({}, e.actions())
+    end)
+
     it("DT-R54 no power refuses with no_power and touches nothing", function()
         local core, e = F.core(function(e) e.is_charging = false end)
         assert.are.same({ nil, "no_power" }, { core:start() })
@@ -263,6 +273,7 @@ describe("poll", function()
     it("ST-T6 connected -> idle when isMtpStarted drops to 0", function()
         local core, e = F.connected()
         e.props["com.lab126.mtp isMtpStarted"] = 0
+        e.t = 1.5
         local from = #e.calls + 1
         assert.are.equal("dropped", core:poll())
         assert.are.equal("idle", core.state)
@@ -295,6 +306,7 @@ describe("poll", function()
     it("DT-R43 a failed lipc read (nil) is not a dropout", function()
         local core, e = F.connected()
         e.lipc_dead = true
+        e.t = 1.5
         assert.is_nil(core:poll())
         assert.are.equal("connected", core.state)
     end)
@@ -330,9 +342,16 @@ describe("poll", function()
 end)
 
 describe("timeout boundaries", function()
-    it("BVA-07 poll interval is 250 ms and the timeout 20 s", function()
-        assert.are.equal(0.25, Mtp.POLL_INTERVAL)
-        assert.are.equal(20, Mtp.TIMEOUT)
+    it("BVA-08 isMtpStarted is read at most once per second: not at +0.75 s, again at +1.00 s", function()
+        local core, e = F.connected()
+        local reads = e.count("isMtpStarted")
+        e.props["com.lab126.mtp isMtpStarted"] = 0
+        e.t = 1.25
+        assert.is_nil(core:poll())
+        assert.are.equal(reads, e.count("isMtpStarted"))
+        e.t = 1.5
+        assert.are.equal("dropped", core:poll())
+        assert.are.equal(reads + 1, e.count("isMtpStarted"))
     end)
 
     it("BVA-01 at 19.75 s the plugin still waits", function()

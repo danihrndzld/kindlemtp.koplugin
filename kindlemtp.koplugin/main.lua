@@ -70,7 +70,8 @@ local CHECK_LABELS = {
     volumd_running = _("volumd stopped"),
 }
 
-local probe_result = core:probe(true)
+-- No lipc check at load: a hung responder would block startup for 10 s. Start and About run it.
+local probe_result = core:probe(true, true)
 logger.info("kindlemtp: probe at load:", probe_result.ok and "ok" or probe_result.reason)
 
 local dialog, auto_started, saved_share, tick

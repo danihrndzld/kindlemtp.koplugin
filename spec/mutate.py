@@ -32,6 +32,9 @@ M = [
  ("M23", "lipc fallback drops -i", '"lipc-set-prop -i %s %s %d"', '"lipc-set-prop %s %s %d"'),
  ("M24", "Auto-start also in the reader", 'enabled == true and in_filemanager == true and not active', 'enabled == true and not active'),
  ("M25", "Crash leftover keeps preventScreenSaver 1", 'if v == nil and plugin_marker then v = 0 end', ''),
+ ("M27", "isMtpStarted read on every tick", 'now - self.lipc_at >= M.LIPC_INTERVAL', 'true'),
+ ("M28", "Unreadable lipc treated as a stale marker", 'if started == nil then return nil, "no_lipc" end', ''),
+ ("M29", "Load-time probe still reads lipc", 'skip_lipc == true or self:started() ~= nil', 'self:started() ~= nil'),
  ("M26", "Host check after the timeout check", None, None),
 ]
 env = dict(os.environ)
@@ -41,7 +44,7 @@ for mid, desc, old, new in M:
     src = orig
     if mid == "M26":
         a = '    if self:host_configured(started) then'
-        i = src.index(a); j = src.index('    if self.env.now() - self.started_at >= M.TIMEOUT then'); k = src.index('    return nil\nend\n\n--- Tears down')
+        i = src.index(a); j = src.index('    if now - self.started_at >= M.TIMEOUT then'); k = src.index('    return nil\nend\n\n--- Tears down')
         src = src[:i] + src[j:k] + src[i:j] + src[k:]
     else:
         assert src.count(old) == 1, (mid, src.count(old))

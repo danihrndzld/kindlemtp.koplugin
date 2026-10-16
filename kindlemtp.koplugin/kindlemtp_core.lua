@@ -13,6 +13,9 @@ M.__index = M
 
 M.POLL_INTERVAL = 0.25 -- seconds between poll() calls
 M.TIMEOUT = 20 -- seconds to wait for a host after startMtp
+-- A lipc property read can block for liblipc's 10 s timeout when the responder hangs,
+-- so poll() reads isMtpStarted at most this often (seconds).
+M.LIPC_INTERVAL = 1
 M.MARKER = "/tmp/kindlemtp.active"
 M.MTP_SH = "/usr/bin/mtp.sh"
 M.GADGET = "/sys/kernel/config/usb_gadget/mtpgadget"
@@ -120,7 +123,8 @@ function M:volumd_running()
 end
 
 --- Runs the 7 checks. Returns { ok, reason = first failing check, checks = { {reason, ok}... } }.
-function M:probe(is_kindle)
+--- `skip_lipc` leaves out the lipc check (it can block up to 10 s), counting it as passed.
+function M:probe(is_kindle, skip_lipc)
     local env = self.env
     local checks = {
         { "not_kindle", is_kindle == true },
@@ -128,7 +132,7 @@ function M:probe(is_kindle)
         { "no_gadget", env.exists(M.GADGET) == true },
         { "no_responder", M.first_pid(self:sh("pidof tizen-mtp")) ~= nil },
         { "no_dbus_send", env.exists(M.DBUS_SEND) == true },
-        { "no_lipc", self:started() ~= nil },
+        { "no_lipc", skip_lipc == true or self:started() ~= nil },
         { "volumd_running", not self:volumd_running() },
     }
     local result = { ok = true, checks = {} }
@@ -189,9 +193,12 @@ function M:start()
     local text = env.read(M.MARKER)
     if text then
         local marker = M.parse_marker(text)
-        if self:started() == 1 then
+        local started = self:started()
+        if started == 1 then
             return nil, (marker and marker.owner == "plugin") and "already_active" or "owner_other"
         end
+        -- Only an explicit 0 makes the marker stale; a failed read keeps it.
+        if started == nil then return nil, "no_lipc" end
         self:log("info", "removing stale marker: " .. trim(text))
         env.remove(M.MARKER)
         stale_plugin = marker ~= nil and marker.owner == "plugin"
@@ -211,7 +218,7 @@ function M:start()
     self.saved_pss = stale_plugin and 0 or (env.lipc.get_int(M.POWERD, "preventScreenSaver") or 0)
     env.lipc.set_int(M.POWERD, "preventScreenSaver", 1)
 
-    self.started_at, self.udc_seen = env.now(), false
+    self.started_at, self.udc_seen, self.lipc_at = env.now(), false, nil
     self.state = "waiting_host"
     self:log("info", "waiting for host, signal goes to " .. self.dest)
     return true
@@ -253,7 +260,11 @@ function M:poll()
         self.state = "idle"
         return "released"
     end
-    local started = self:started()
+    local now = self.env.now()
+    if not self.lipc_at or now - self.lipc_at >= M.LIPC_INTERVAL then
+        self.lipc_at, self.last_started = now, self:started()
+    end
+    local started = self.last_started
     if started == 0 then
         self:log("warn", "responder dropped out (isMtpStarted 0)")
         self:stop()
@@ -272,7 +283,7 @@ function M:poll()
         self:log("info", "host configured USB, drive mode sent")
         return "connected"
     end
-    if self.env.now() - self.started_at >= M.TIMEOUT then
+    if now - self.started_at >= M.TIMEOUT then
         self:log("info", "no host within " .. M.TIMEOUT .. " s")
         self:stop()
         return "timeout"

@@ -59,6 +59,13 @@ describe("probe", function()
         assert.is_true(r.checks[3].ok)
     end)
 
+    it("DT-R15 load-time probe skips lipc: passes with lipc dead and never reads it", function()
+        local core, e = F.core(function(e) e.lipc_dead = true end)
+        local r = core:probe(true, true)
+        assert.is_true(r.ok)
+        assert.are.equal(0, e.count("isMtpStarted"))
+    end)
+
     it("DT-R10 VOLUMD_STOPPED=yes wins without reading /proc", function()
         local r, e = probe(function(e)
             e.contents["/proc/2187/stat"] = F.fixture("proc_stat_S.txt")
