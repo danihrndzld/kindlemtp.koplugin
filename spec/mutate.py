@@ -48,11 +48,13 @@ MAIN = "kindlemtp.koplugin/main.lua"
 M += [
  ("M30", "CloseWidget refreshes a closing browser", 'finish(nil, event == "CloseWidget")', 'finish()', MAIN),
  ("M31", "No repaint before Reset", '                            UIManager:forceRePaint()\n', '', MAIN),
- ("M32", "NotCharging ignores the UDC state", 'event == "NotCharging" and active and core:udc_configured()', 'false', MAIN),
+ ("M32", "NotCharging ignores the UDC state", 'not_charging and not waiting and core:udc_configured()', 'false', MAIN),
  ("M33", "Settings not flushed before Start", '    UIManager:flushSettings()\n', '', MAIN),
  ("M34", "Load-time probe reads lipc", 'local probe_result = core:probe(true, true)', 'local probe_result = core:probe(true)', MAIN),
  ("M35", "PluginShare never restored", '    PluginShare.keepalive = saved_share.keepalive\n', '', MAIN),
  ("M43", "File browser refreshed at once, before fsp catches up", 'UIManager:scheduleIn(REFRESH_DELAY, refreshFileManager)', 'refreshFileManager()', MAIN),
+ ("M44", "NotCharging while waiting ignores the charging re-read", 'if waiting then return not charging end', ''),
+ ("M45", "main.lua never re-reads charging at NotCharging", 'not_charging and waiting and Device:getPowerDevice():isCharging()', 'false', MAIN),
  ("M36", "Auto-start ignores that the file manager closed during the delay", 'if fm and not core:active()', 'if not core:active()', MAIN),
 ]
 env = dict(os.environ)

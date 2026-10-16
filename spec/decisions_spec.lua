@@ -10,6 +10,14 @@ describe("stop triggers", function()
         assert.is_false(Mtp.stop_trigger("NotCharging", true, true))
     end)
 
+    it("DT-R35 NotCharging while waiting for the host, still charging (battery Full), does not stop", function()
+        assert.is_false(Mtp.stop_trigger("NotCharging", true, false, true, true))
+    end)
+
+    it("DT-R36 NotCharging while waiting for the host, no longer charging (unplugged), stops", function()
+        assert.is_true(Mtp.stop_trigger("NotCharging", true, false, true, false))
+    end)
+
     it("DT-R22 NotCharging while idle does not stop", function()
         assert.is_false(Mtp.stop_trigger("NotCharging", false, false))
     end)

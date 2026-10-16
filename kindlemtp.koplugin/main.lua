@@ -179,8 +179,11 @@ end
 
 local function stopOn(event)
     local active = core:active()
-    local udc_configured = event == "NotCharging" and active and core:udc_configured()
-    if Mtp.stop_trigger(event, active, udc_configured) then
+    local not_charging = event == "NotCharging" and active
+    local waiting = core.state == "waiting_host"
+    local udc_configured = not_charging and not waiting and core:udc_configured()
+    local charging = not_charging and waiting and Device:getPowerDevice():isCharging()
+    if Mtp.stop_trigger(event, active, udc_configured, waiting, charging) then
         logger.info("kindlemtp: stopping on", event)
         core:stop()
         finish(nil, event == "CloseWidget")

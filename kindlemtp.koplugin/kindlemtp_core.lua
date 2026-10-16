@@ -88,11 +88,16 @@ function M.host_seen(text)
     return (text or ""):find(STATE2) ~= nil
 end
 
---- Stop-trigger decision for KOReader events (main.lua). `udc_configured` only matters for NotCharging,
---- which also fires when the battery reads Full with the cable still in.
-function M.stop_trigger(event, active, udc_configured)
+--- Stop-trigger decision for KOReader events (main.lua). NotCharging also fires when the battery reads
+--- Full with the cable still in. Connected, the UDC reads "configured" steadily, so that is the test.
+--- While waiting for the host the UDC is not configured yet (about 1 s), so the test there is
+--- `charging`, re-read at the event.
+function M.stop_trigger(event, active, udc_configured, waiting, charging)
     if not active then return false end
-    if event == "NotCharging" then return not udc_configured end
+    if event == "NotCharging" then
+        if waiting then return not charging end
+        return not udc_configured
+    end
     return event == "Suspend" or event == "CloseWidget" or event == "stopPlugin"
 end
 

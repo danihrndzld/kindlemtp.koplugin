@@ -55,7 +55,7 @@ KOReader's launcher (`platform/kindle/koreader.sh`) sends SIGSTOP to `volumd` in
 **Start needs power on the cable.** `startMtp` is silently skipped by the responder without USB power (`usb_plugin` unset), while `isMtpStarted` still reads 1 (it is a flag, not a state). Start is refused when `Device.powerd:isCharging()` is false ("Connect the cable first").
 
 **Stops automatically** on:
-- `NotCharging`, but only when `/sys/class/udc/*/state` is not `configured`. `NotCharging` also fires when the battery reads Full with the cable still in.
+- `NotCharging`, but only when `/sys/class/udc/*/state` is not `configured`. `NotCharging` also fires when the battery reads Full with the cable still in. While waiting for the host (about 1 s) the UDC is not configured yet, so there the event stops only if `Device.powerd:isCharging()`, re-read at the event, is false (revised 2026-10-16).
 - `Suspend`.
 - `CloseWidget` (the file manager closing, which includes KOReader exiting). `stopPlugin` is not an exit hook; it runs only when the user disables the plugin, and also stops.
 - The responder dropping out (`isMtpStarted` reads 0 during the poll): the dialog closes.
@@ -157,6 +157,7 @@ Use `pcall(require, "liblipclua")` with `lipc.init("com.github.koreader.kindlemt
 - KOReader's environment has `VOLUMD_STOPPED=yes` and `STOP_FRAMEWORK=yes`; `volumd` is in state `T`.
 - `/usr/lib/lua/liblipclua.so` exists.
 - `isMtpStarted` reads 1 while charging over USB.
+- In responder state 3 (connected) the UDC stays bound and `/sys/class/udc/11211000.usb/state` reads `configured` steadily (6 samples over 6 s). After `stopMtp` + `mtp.sh udc disable` the gadget's UDC file is empty. At state 1 the UDC is bound but its state reads `not attached`; `configured` shows only briefly before state 2.
 - BusyBox `sleep` takes integers only (`sleep 0.5` fails with "invalid number"); `usleep` exists. The plugin uses no shell sleep: it waits through `UIManager:scheduleIn`.
 - `dbus-send` writes error replies to stderr, with empty stdout and exit status 1.
 - KOBridge's live USB test passed: responder states 4 → 1 → 2 → 3 → 4, Wi-Fi stayed up, the marker and keep-awake were restored.

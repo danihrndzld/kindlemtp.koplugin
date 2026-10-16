@@ -66,6 +66,21 @@ describe("main.lua", function()
         assert.are.equal("refreshPath", k.log[#k.log])
     end)
 
+    it("DT-R67 NotCharging while waiting for the host with the cable still charging keeps the start", function()
+        local k, e, fm = start()
+        e.udc_state = "not attached"
+        fm:onNotCharging()
+        assert.are.equal("waiting_host", k.core.state)
+        assert.are.equal(0, e.count("cat /sys/class/udc"))
+    end)
+
+    it("DT-R68 NotCharging while waiting for the host after an unplug stops", function()
+        local k, _, fm = start()
+        k.charging = false
+        fm:onNotCharging()
+        assert.are.equal("idle", k.core.state)
+    end)
+
     it("DT-R62 CloseWidget stops without refreshing the closing browser", function()
         local k, e, fm = start()
         connect(k, e)
