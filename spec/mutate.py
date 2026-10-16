@@ -36,6 +36,9 @@ M = [
  ("M28", "Unreadable lipc treated as a stale marker", 'if started == nil then return nil, "no_lipc" end', ''),
  ("M29", "Load-time probe still reads lipc", 'skip_lipc == true or self:started() ~= nil', 'self:started() ~= nil'),
  ("M37", "Losing the marker race tears down KOBridge's session", 'if other and other.owner ~= "plugin" then', 'if false then'),
+ ("M38", "Reset before the marker claim", '    -- The marker is the lock shared with KOBridge: take it before touching the responder.\n',
+  '    self:sh(M.MTP_SH .. " udc disable")\n    env.lipc.set_int(M.BUS, "stopMtp", 1)\n'),
+ ("M39", "A failed claim tears down", '        self:log("warn", "failed: marker_failed")\n', '        self:stop()\n'),
  ("M26", "Host check after the timeout check", None, None),
 ]
 MAIN = "kindlemtp.koplugin/main.lua"

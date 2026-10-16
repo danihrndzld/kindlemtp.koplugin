@@ -16,6 +16,7 @@ KOReader's launcher (`platform/kindle/koreader.sh`) sends SIGSTOP to `volumd` in
 
 | Step | Command | tizen-mtp state |
 |---|---|---|
+| Claim | `set -C; echo 'owner=… pid=… since=…' > /tmp/kindlemtp.active` (fails if the file exists) | unchanged |
 | Reset | `/usr/bin/mtp.sh udc disable`; `lipc-set-prop -i com.lab126.mtp stopMtp 1` | any → 4 |
 | Start | `lipc-set-prop -i com.lab126.mtp startMtp 1` | 0/4 → 1; host configures USB → 2 |
 | Drive mode | `dbus-send --system --dest=<tizen-mtp's bus name> --type=signal /default com.lab126.volumd.driveModeStateChanged int32:1` | 2 → 3, host can open a session |
@@ -110,7 +111,7 @@ Every check returns a reason the UI can show:
 
 States: `idle → starting → waiting_host → connected → stopping → idle`, plus `failed`.
 
-- **start()**: refuses with `already_active` when the marker exists and is valid, or `owner_other` when another owner holds it; refuses `no_power` without charging. Then reset, record the syslog line count, `startMtp 1`, write the marker. Moves to `waiting_host`. The responder itself ignores a second `startMtp` outside states 0 and 4.
+- **start()**: refuses with `already_active` when the marker exists and is valid, or `owner_other` when another owner holds it; refuses `no_power` without charging. Then claim the marker (exclusive write), and only after that reset, record the syslog line count and send `startMtp 1`. The marker is the lock shared with KOBridge, so it must be taken before touching the responder: a lost race (the exclusive write fails because a KOBridge marker exists) returns `owner_other` with zero device commands, and any failure after the claim tears down and removes our own marker. Moves to `waiting_host`. (Revised 2026-10-16; the first version wrote the marker after `startMtp`, so a lost race had already reset KOBridge's session.) The responder itself ignores a second `startMtp` outside states 0 and 4.
 - **poll()** (every 250 ms from `UIManager:scheduleIn`, never blocking): detects state 2 (rule below), then sends the drive-mode signal once and moves to `connected`. After 20 s without a host it stops quietly and returns `timeout`. In `connected`, a 0 from `isMtpStarted` means the responder dropped out: stop.
 - **stop()**: idempotent from every state, whoever owns the marker: `stopMtp 1`, then `mtp.sh udc disable` (needed: `stopMtp` from state 3 does not unbind the UDC), restore keep-awake, remove the marker. Moves to `idle`. After an unplug in `waiting_host` the responder parks in state 1 or 2 and only `stopMtp` clears it, so `NotCharging` must drive stop.
 - **reset()**: `restart mtp`, then stop.
@@ -119,7 +120,7 @@ States: `idle → starting → waiting_host → connected → stopping → idle`
 ### Marker contract (shared with KOBridge)
 
 - Path `/tmp/kindlemtp.active`, one line: `owner=plugin|kobridge pid=<N> since=<epoch>`.
-- Created atomically (`set -C; echo … > file`). Valid only while `isMtpStarted` reads 1; otherwise stale and removed by whoever reads it.
+- Created atomically (`set -C; echo … > file`), before any command reaches the responder. Valid only while `isMtpStarted` reads 1; otherwise stale and removed by whoever reads it.
 - Start refuses when a valid marker has another owner. Stop always tears down, whatever the owner.
 - The plugin's poll closes its dialog when the marker disappears or `isMtpStarted` drops to 0 (KOBridge stopped it).
 
