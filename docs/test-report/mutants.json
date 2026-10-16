@@ -2,7 +2,7 @@
  {
   "id": "M01",
   "desc": "Drive-mode signal broadcast (no --dest=)",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:276",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:285",
   "killed": true,
   "tests": [
    "AC-03",
@@ -12,7 +12,7 @@
  {
   "id": "M02",
   "desc": "Signal re-sent on every tick in connected",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:273",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:282",
   "killed": true,
   "tests": [
    "AC-03",
@@ -24,7 +24,7 @@
  {
   "id": "M03",
   "desc": "Timeout uses > instead of >=",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:286",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:295",
   "killed": true,
   "tests": [
    "AC-05",
@@ -51,7 +51,7 @@
  {
   "id": "M05",
   "desc": "Stop: udc disable before stopMtp",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:298",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:307",
   "killed": true,
   "tests": [
    "AC-02",
@@ -63,7 +63,7 @@
  {
   "id": "M06",
   "desc": "Stop skips udc disable",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:299",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:308",
   "killed": true,
   "tests": [
    "AC-02",
@@ -77,7 +77,7 @@
  {
   "id": "M07",
   "desc": "Stop leaves the marker",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:303",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:312",
   "killed": true,
   "tests": [
    "AC-02",
@@ -106,7 +106,8 @@
   "line": "kindlemtp.koplugin/kindlemtp_core.lua:217",
   "killed": true,
   "tests": [
-   "AC-01"
+   "AC-01",
+   "DT-R59"
   ]
  },
  {
@@ -180,7 +181,7 @@
  {
   "id": "M16",
   "desc": "Syslog baseline ignored (reads whole log)",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:231",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:240",
   "killed": true,
   "tests": [
    "AC-05",
@@ -198,7 +199,7 @@
  {
   "id": "M17",
   "desc": "Dropout test on nil instead of 0",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:268",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:277",
   "killed": true,
   "tests": [
    "BVA-08",
@@ -210,7 +211,7 @@
  {
   "id": "M18",
   "desc": "UDC hint disabled",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:248",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:257",
   "killed": true,
   "tests": [
    "AC-07"
@@ -219,7 +220,7 @@
  {
   "id": "M19",
   "desc": "Release deletes another owner's marker",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:259",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:268",
   "killed": true,
   "tests": [
    "DT-R40",
@@ -249,7 +250,7 @@
  {
   "id": "M22",
   "desc": "sh ignores the exit code",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:336",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:345",
   "killed": true,
   "tests": [
    "EP-41",
@@ -259,7 +260,7 @@
  {
   "id": "M23",
   "desc": "lipc fallback drops -i",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:390",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:399",
   "killed": true,
   "tests": [
    "EP-48",
@@ -288,7 +289,7 @@
  {
   "id": "M27",
   "desc": "isMtpStarted read on every tick",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:264",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:273",
   "killed": true,
   "tests": [
    "BVA-08"
@@ -314,9 +315,18 @@
   ]
  },
  {
+  "id": "M37",
+  "desc": "Losing the marker race tears down KOBridge's session",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:219",
+  "killed": true,
+  "tests": [
+   "DT-R59"
+  ]
+ },
+ {
   "id": "M26",
   "desc": "Host check after the timeout check",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:275",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:284",
   "killed": true,
   "tests": [
    "BVA-05"
