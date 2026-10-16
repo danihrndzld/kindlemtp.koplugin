@@ -1,0 +1,288 @@
+[
+ {
+  "id": "M01",
+  "desc": "Drive-mode signal broadcast (no --dest=)",
+  "line": "kindlemtp.koplugin/mtp.lua:265",
+  "killed": true,
+  "tests": [
+   "AC-03",
+   "AC-04"
+  ]
+ },
+ {
+  "id": "M02",
+  "desc": "Signal re-sent on every tick in connected",
+  "line": "kindlemtp.koplugin/mtp.lua:262",
+  "killed": true,
+  "tests": [
+   "AC-03",
+   "DT-R43",
+   "ST-I5"
+  ]
+ },
+ {
+  "id": "M03",
+  "desc": "Timeout uses > instead of >=",
+  "line": "kindlemtp.koplugin/mtp.lua:275",
+  "killed": true,
+  "tests": [
+   "AC-05",
+   "BVA-02",
+   "BVA-04"
+  ]
+ },
+ {
+  "id": "M04",
+  "desc": "Timeout 30 s instead of 20 s",
+  "line": "kindlemtp.koplugin/mtp.lua:15",
+  "killed": true,
+  "tests": [
+   "AC-05",
+   "BVA-02",
+   "BVA-03",
+   "BVA-04",
+   "BVA-07"
+  ]
+ },
+ {
+  "id": "M05",
+  "desc": "Stop: udc disable before stopMtp",
+  "line": "kindlemtp.koplugin/mtp.lua:287",
+  "killed": true,
+  "tests": [
+   "AC-02",
+   "ST-T13",
+   "ST-T14",
+   "ST-T6"
+  ]
+ },
+ {
+  "id": "M06",
+  "desc": "Stop skips udc disable",
+  "line": "kindlemtp.koplugin/mtp.lua:288",
+  "killed": true,
+  "tests": [
+   "AC-02",
+   "DT-R42",
+   "ST-T13",
+   "ST-T14",
+   "ST-T5",
+   "ST-T6"
+  ]
+ },
+ {
+  "id": "M07",
+  "desc": "Stop leaves the marker",
+  "line": "kindlemtp.koplugin/mtp.lua:292",
+  "killed": true,
+  "tests": [
+   "AC-02",
+   "AC-08",
+   "ST-T13",
+   "ST-T14",
+   "ST-T17",
+   "ST-T18",
+   "ST-T20",
+   "ST-T6",
+   "ST-T7"
+  ]
+ },
+ {
+  "id": "M08",
+  "desc": "Start ignores charging",
+  "line": "kindlemtp.koplugin/mtp.lua:199",
+  "killed": true,
+  "tests": [
+   "DT-R54"
+  ]
+ },
+ {
+  "id": "M09",
+  "desc": "Marker written non-exclusively",
+  "line": "kindlemtp.koplugin/mtp.lua:210",
+  "killed": true,
+  "tests": [
+   "AC-01"
+  ]
+ },
+ {
+  "id": "M10",
+  "desc": "Owner check inverted",
+  "line": "kindlemtp.koplugin/mtp.lua:193",
+  "killed": true,
+  "tests": [
+   "DT-R50",
+   "DT-R51"
+  ]
+ },
+ {
+  "id": "M11",
+  "desc": "volumd state test uses S instead of T",
+  "line": "kindlemtp.koplugin/mtp.lua:119",
+  "killed": true,
+  "tests": [
+   "DT-R11",
+   "DT-R12",
+   "DT-R8",
+   "DT-R9"
+  ]
+ },
+ {
+  "id": "M12",
+  "desc": "VOLUMD_STOPPED flag ignored",
+  "line": "kindlemtp.koplugin/mtp.lua:115",
+  "killed": true,
+  "tests": [
+   "DT-R10"
+  ]
+ },
+ {
+  "id": "M13",
+  "desc": "Well-known bus name skipped",
+  "line": "kindlemtp.koplugin/mtp.lua:150",
+  "killed": true,
+  "tests": [
+   "AC-01",
+   "AC-03",
+   "EP-20"
+  ]
+ },
+ {
+  "id": "M14",
+  "desc": "NotCharging ignores the UDC gate",
+  "line": "kindlemtp.koplugin/mtp.lua:81",
+  "killed": true,
+  "tests": [
+   "DT-R21"
+  ]
+ },
+ {
+  "id": "M15",
+  "desc": "Keep-awake never restored",
+  "line": "kindlemtp.koplugin/mtp.lua:174",
+  "killed": true,
+  "tests": [
+   "AC-02",
+   "AC-08",
+   "DT-R40",
+   "DT-R55",
+   "DT-R56",
+   "ST-T14",
+   "ST-T17",
+   "ST-T6"
+  ]
+ },
+ {
+  "id": "M16",
+  "desc": "Syslog baseline ignored (reads whole log)",
+  "line": "kindlemtp.koplugin/mtp.lua:224",
+  "killed": true,
+  "tests": [
+   "AC-05",
+   "AC-06",
+   "AC-07",
+   "BVA-01",
+   "BVA-02",
+   "BVA-03",
+   "BVA-04",
+   "EG-04"
+  ]
+ },
+ {
+  "id": "M17",
+  "desc": "Dropout test on nil instead of 0",
+  "line": "kindlemtp.koplugin/mtp.lua:257",
+  "killed": true,
+  "tests": [
+   "DT-R42",
+   "DT-R43",
+   "ST-T6"
+  ]
+ },
+ {
+  "id": "M18",
+  "desc": "UDC hint disabled",
+  "line": "kindlemtp.koplugin/mtp.lua:241",
+  "killed": true,
+  "tests": [
+   "AC-07"
+  ]
+ },
+ {
+  "id": "M19",
+  "desc": "Release deletes another owner's marker",
+  "line": "kindlemtp.koplugin/mtp.lua:252",
+  "killed": true,
+  "tests": [
+   "DT-R40",
+   "DT-R41"
+  ]
+ },
+ {
+  "id": "M20",
+  "desc": "Probe reports the last failure",
+  "line": "kindlemtp.koplugin/mtp.lua:137",
+  "killed": true,
+  "tests": [
+   "DT-R9"
+  ]
+ },
+ {
+  "id": "M21",
+  "desc": "GetConnectionUnixProcessID parser broken",
+  "line": "kindlemtp.koplugin/mtp.lua:52",
+  "killed": true,
+  "tests": [
+   "AC-04",
+   "EP-03",
+   "EP-21"
+  ]
+ },
+ {
+  "id": "M22",
+  "desc": "sh ignores the exit code",
+  "line": "kindlemtp.koplugin/mtp.lua:325",
+  "killed": true,
+  "tests": [
+   "EP-41",
+   "EP-45"
+  ]
+ },
+ {
+  "id": "M23",
+  "desc": "lipc fallback drops -i",
+  "line": "kindlemtp.koplugin/mtp.lua:379",
+  "killed": true,
+  "tests": [
+   "EP-48",
+   "EP-52"
+  ]
+ },
+ {
+  "id": "M24",
+  "desc": "Auto-start also in the reader",
+  "line": "kindlemtp.koplugin/mtp.lua:87",
+  "killed": true,
+  "tests": [
+   "DT-R32"
+  ]
+ },
+ {
+  "id": "M25",
+  "desc": "Crash leftover keeps preventScreenSaver 1",
+  "line": "kindlemtp.koplugin/mtp.lua:173",
+  "killed": true,
+  "tests": [
+   "DT-R56"
+  ]
+ },
+ {
+  "id": "M26",
+  "desc": "Host check after the timeout check",
+  "line": "kindlemtp.koplugin/mtp.lua:264",
+  "killed": true,
+  "tests": [
+   "BVA-05"
+  ]
+ }
+]
