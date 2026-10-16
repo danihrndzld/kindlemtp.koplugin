@@ -266,11 +266,12 @@
  {
   "id": "M23",
   "desc": "lipc fallback drops -i",
-  "line": "kindlemtp.koplugin/kindlemtp_core.lua:420",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:422",
   "killed": true,
   "tests": [
    "EP-48",
-   "EP-52"
+   "EP-52",
+   "EP-56"
   ]
  },
  {
@@ -478,6 +479,25 @@
   "killed": true,
   "tests": [
    "DT-R66"
+  ]
+ },
+ {
+  "id": "M46",
+  "desc": "Failed liblipclua read gives up instead of using lipc-get-prop",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:429",
+  "killed": true,
+  "tests": [
+   "EP-56",
+   "EP-57"
+  ]
+ },
+ {
+  "id": "M47",
+  "desc": "Failed liblipclua write gives up instead of using lipc-set-prop",
+  "line": "kindlemtp.koplugin/kindlemtp_core.lua:421",
+  "killed": true,
+  "tests": [
+   "EP-56"
   ]
  }
 ]

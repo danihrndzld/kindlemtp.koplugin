@@ -413,10 +413,12 @@ function M.posix_env(o)
         end
         return handle
     end
+    -- liblipclua first; when it is missing or a call through it fails, the lipc-*-prop commands.
+    -- A Scribe on 5.19.5 reported "does not answer over lipc" while the responder ran (2026-10).
     env.lipc = {
         set_int = function(pub, prop, value)
             local h = lipc_handle()
-            if h then return (pcall(h.set_int_property, h, pub, prop, value)) end
+            if h and pcall(h.set_int_property, h, pub, prop, value) then return true end
             local _, ok = env.sh(string.format("lipc-set-prop -i %s %s %d", pub, prop, value))
             return ok
         end,
@@ -424,7 +426,7 @@ function M.posix_env(o)
             local h = lipc_handle()
             if h then
                 local ok, v = pcall(h.get_int_property, h, pub, prop)
-                return ok and tonumber(v) or nil
+                if ok and tonumber(v) then return tonumber(v) end
             end
             local out, ok = env.sh(string.format("lipc-get-prop -eiq %s %s", pub, prop))
             return ok and tonumber(out:match("%-?%d+")) or nil

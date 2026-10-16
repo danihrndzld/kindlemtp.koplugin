@@ -221,7 +221,7 @@ luacheck kindlemtp.koplugin spec
 
 Every test name starts with a test-design ID (`EP-` equivalence partition, `BVA-` boundary value, `DT-R` decision-table rule, `ST-T`/`ST-I` valid and invalid state transition, `AC-` criterion from the design, `EG-` error guess).
 
-Mutation check (breaks 45 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
+Mutation check (breaks 47 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
 
 ```sh
 python3 spec/mutate.py docs/test-report/mutants.json

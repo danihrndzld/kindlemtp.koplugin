@@ -56,6 +56,8 @@ M += [
  ("M44", "NotCharging while waiting ignores the charging re-read", 'if waiting then return not charging end', ''),
  ("M45", "main.lua never re-reads charging at NotCharging", 'not_charging and waiting and Device:getPowerDevice():isCharging()', 'false', MAIN),
  ("M36", "Auto-start ignores that the file manager closed during the delay", 'if fm and not core:active()', 'if not core:active()', MAIN),
+ ("M46", "Failed liblipclua read gives up instead of using lipc-get-prop", 'if ok and tonumber(v) then return tonumber(v) end', 'do return ok and tonumber(v) or nil end'),
+ ("M47", "Failed liblipclua write gives up instead of using lipc-set-prop", 'if h and pcall(h.set_int_property, h, pub, prop, value) then return true end', 'if h then return (pcall(h.set_int_property, h, pub, prop, value)) end'),
 ]
 env = dict(os.environ)
 res = []

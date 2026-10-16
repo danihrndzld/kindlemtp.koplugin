@@ -119,13 +119,41 @@ describe("posix env", function()
         assert.are.same({ "lipc-set-prop -i com.lab126.mtp stopMtp 1" }, cmds)
     end)
 
-    it("EP-51 a liblipclua error gives false or nil, never an exception", function()
+    it("EP-51 a liblipclua error and a failing command give false or nil, never an exception", function()
         local handle = {
             set_int_property = function() error("lipc error 3") end,
             get_int_property = function() error("lipc error 3") end,
         }
         local env = recording_env({ init = function() return handle end })
+        env.sh = function() return "", false end
         assert.is_false(env.lipc.set_int("com.lab126.mtp", "startMtp", 1))
         assert.is_nil(env.lipc.get_int("com.lab126.mtp", "isMtpStarted"))
+    end)
+
+    it("EP-56 a failing liblipclua call falls back to lipc-*-prop", function()
+        local handle = {
+            set_int_property = function() error("lipc error 3") end,
+            get_int_property = function() error("lipc error 3") end,
+        }
+        local env, cmds = recording_env({ init = function() return handle end })
+        assert.are.equal(1, env.lipc.get_int("com.lab126.mtp", "isMtpStarted"))
+        assert.is_true(env.lipc.set_int("com.lab126.mtp", "startMtp", 1))
+        assert.are.same({
+            "lipc-get-prop -eiq com.lab126.mtp isMtpStarted",
+            "lipc-set-prop -i com.lab126.mtp startMtp 1",
+        }, cmds)
+    end)
+
+    it("EP-57 a liblipclua read that returns no number falls back to lipc-get-prop", function()
+        local handle = { get_int_property = function() return nil end }
+        local env, cmds = recording_env({ init = function() return handle end })
+        assert.are.equal(1, env.lipc.get_int("com.lab126.mtp", "isMtpStarted"))
+        assert.are.same({ "lipc-get-prop -eiq com.lab126.mtp isMtpStarted" }, cmds)
+    end)
+
+    it("EP-58 a liblipclua init failure falls back to lipc-*-prop", function()
+        local env, cmds = recording_env({ init = function() error("name taken") end })
+        assert.are.equal(1, env.lipc.get_int("com.lab126.mtp", "isMtpStarted"))
+        assert.are.same({ "lipc-get-prop -eiq com.lab126.mtp isMtpStarted" }, cmds)
     end)
 end)
