@@ -5,9 +5,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: leafo/gh-actions-lua@v11
-        with: { luaVersion: luajit-2.1 }
-      - uses: leafo/gh-actions-luarocks@v5
-      - run: luarocks install busted && luarocks install luacheck
+      # luarocks runs on PUC Lua 5.1: under LuaJIT it cannot load the luarocks.org manifest
+      # ("main function has more than 65536 constants"). The tests still run on LuaJIT.
+      - run: sudo apt-get update && sudo apt-get install -y luajit lua5.1 liblua5.1-0-dev luarocks
+      - run: sudo luarocks --lua-version=5.1 install busted
+      - run: sudo luarocks --lua-version=5.1 install luacheck
       - run: luacheck kindlemtp.koplugin spec
-      - run: busted
+      - run: busted --lua=luajit
