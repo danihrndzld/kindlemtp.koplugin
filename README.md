@@ -164,7 +164,7 @@ Details that matter:
 - **Destination.** `tizen-mtp` opens lipc as `com.lab126.mtp` and so owns that D-Bus name. If it is not in `ListNames`, the plugin finds the responder's unique name (`:1.N`) by comparing `GetConnectionUnixProcessID` with `pidof tizen-mtp`.
 - **Detecting the computer.** The responder goes from state 1 to state 2 in under a second. The plugin records the line count of `/var/log/messages` before Start and then, every 250 ms, looks for a new `mtp-responder` line containing `handled state_change_event [12] event [2] current mtp state`. As a second signal it also watches the gadget's `UDC` file go from bound to empty. It reads `isMtpStarted` at most once per second, because a lipc read can block for up to 10 seconds when the responder hangs.
 - **Stopping needs both commands.** `stopMtp` from state 3 does not unbind the USB gadget, so the plugin also runs `mtp.sh udc disable`.
-- **The marker file** `/tmp/kindlemtp.active` holds one line, `owner=plugin pid=<N> since=<epoch>`, created atomically with the shell's noclobber option. The KOBridge desktop app uses the same file, so the two never run a transfer at the same time. The marker is the lock, so Start takes it before sending anything to the responder: if KOBridge got there first, Start backs off without touching its session. A marker only counts while `lipc-get-prop com.lab126.mtp isMtpStarted` reads 1.
+- **The marker file** `/tmp/kindlemtp.active` holds one line, `owner=plugin pid=<N> since=<epoch>`, created atomically with the shell's noclobber option. The KOBridge desktop app uses the same file, so the two never run a transfer at the same time. The marker is the lock, so Start takes it before sending anything to the responder: if KOBridge got there first, Start backs off without touching its session. A marker is only treated as a leftover, and removed by the other side, when `lipc-get-prop com.lab126.mtp isMtpStarted` reads 0 and its `since` (the Kindle's own clock) is at least 30 seconds old. A marker with an unreadable or future `since` is never removed that way; Stop and Reset still clear it.
 - **Before Start** the plugin runs 7 checks: the device is a Kindle; `/usr/bin/mtp.sh` exists; `/sys/kernel/config/usb_gadget/mtpgadget` exists; `tizen-mtp` is running; `/usr/bin/dbus-send` exists; `com.lab126.mtp` answers over lipc; and `volumd` is paused (`VOLUMD_STOPPED=yes` from the launcher, or state `T` in `/proc/<pid>/stat`).
 
 All of this is in `kindlemtp.koplugin/kindlemtp_core.lua`, which does not depend on KOReader. `main.lua` holds the menu, the dialog and the event handling. The full design is in [docs/design.md](docs/design.md).
@@ -221,7 +221,7 @@ luacheck kindlemtp.koplugin spec
 
 Every test name starts with a test-design ID (`EP-` equivalence partition, `BVA-` boundary value, `DT-R` decision-table rule, `ST-T`/`ST-I` valid and invalid state transition, `AC-` criterion from the design, `EG-` error guess).
 
-Mutation check (breaks 39 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
+Mutation check (breaks 42 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
 
 ```sh
 python3 spec/mutate.py docs/test-report/mutants.json
