@@ -110,6 +110,26 @@ describe("start", function()
         assert.are.equal(0, e.props["com.lab126.powerd preventScreenSaver"])
     end)
 
+    it("DT-R56 crash leftover still running: Reset turns preventScreenSaver back to 0", function()
+        local core, e = F.core(function(e)
+            marker(e, "plugin")
+            e.props["com.lab126.mtp isMtpStarted"] = 1
+            e.props["com.lab126.powerd preventScreenSaver"] = 1
+        end)
+        core:reset()
+        assert.are.equal(0, e.props["com.lab126.powerd preventScreenSaver"])
+    end)
+
+    it("DT-R57 stopping a KOBridge session leaves preventScreenSaver alone", function()
+        local core, e = F.core(function(e)
+            marker(e, "kobridge")
+            e.props["com.lab126.mtp isMtpStarted"] = 1
+            e.props["com.lab126.powerd preventScreenSaver"] = 1
+        end)
+        core:stop()
+        assert.are.equal(0, e.count("preventScreenSaver"))
+    end)
+
     it("AC-08 keep-awake: a user value of 1 is saved and restored", function()
         local core, e = F.waiting(function(e) e.props["com.lab126.powerd preventScreenSaver"] = 1 end)
         core:stop()

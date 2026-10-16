@@ -107,6 +107,15 @@ describe("posix env", function()
         assert.are.same({}, cmds)
     end)
 
+    it("EP-52 when require('liblipclua') fails, the lipc-*-prop fallback is used", function()
+        assert.is_false((pcall(require, "liblipclua")))
+        local env = Mtp.posix_env{}
+        local cmds = {}
+        env.sh = function(cmd) cmds[#cmds + 1] = cmd; return "", true end
+        env.lipc.set_int("com.lab126.mtp", "stopMtp", 1)
+        assert.are.same({ "lipc-set-prop -i com.lab126.mtp stopMtp 1" }, cmds)
+    end)
+
     it("EP-51 a liblipclua error gives false or nil, never an exception", function()
         local handle = {
             set_int_property = function() error("lipc error 3") end,

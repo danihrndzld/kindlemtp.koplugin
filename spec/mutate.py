@@ -1,0 +1,59 @@
+"""Mutation check: applies each mutant to mtp.lua, runs busted, restores the file.
+
+Usage (repo root, busted on PATH): python3 spec/mutate.py [results.json]
+Exits 1 if any mutant survives.
+"""
+import json, os, re, subprocess, sys
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+F = "kindlemtp.koplugin/mtp.lua"
+M = [
+ ("M01", "Drive-mode signal broadcast (no --dest=)", '" --system --dest=" .. self.dest\n            .. " --type=signal', '" --system"\n            .. " --type=signal'),
+ ("M02", "Signal re-sent on every tick in connected", 'if self.state == "connected" then return nil end', ''),
+ ("M03", "Timeout uses > instead of >=", '>= M.TIMEOUT then', '> M.TIMEOUT then'),
+ ("M04", "Timeout 30 s instead of 20 s", 'M.TIMEOUT = 20', 'M.TIMEOUT = 30'),
+ ("M05", "Stop: udc disable before stopMtp", '    env.lipc.set_int(M.BUS, "stopMtp", 1)\n    -- stopMtp from state 3 does not unbind the UDC.\n    self:sh(M.MTP_SH .. " udc disable")', '    self:sh(M.MTP_SH .. " udc disable")\n    env.lipc.set_int(M.BUS, "stopMtp", 1)'),
+ ("M06", "Stop skips udc disable", '    -- stopMtp from state 3 does not unbind the UDC.\n    self:sh(M.MTP_SH .. " udc disable")', ''),
+ ("M07", "Stop leaves the marker", '    env.remove(M.MARKER)\n    self.state = "idle"', '    self.state = "idle"'),
+ ("M08", "Start ignores charging", 'if not env.charging() then', 'if false then'),
+ ("M09", "Marker written non-exclusively", 'env.write(M.MARKER, line, true)', 'env.write(M.MARKER, line, false)'),
+ ("M10", "Owner check inverted", 'marker.owner == "plugin") and "already_active"', 'marker.owner == "kobridge") and "already_active"'),
+ ("M11", "volumd state test uses S instead of T", 'st ~= nil and st ~= "T"', 'st ~= nil and st ~= "S"'),
+ ("M12", "VOLUMD_STOPPED flag ignored", 'getenv("VOLUMD_STOPPED") == "yes"', 'getenv("VOLUMD_STOPPED") == "never"'),
+ ("M13", "Well-known bus name skipped", 'if n == M.BUS then return n end', 'if false then return n end'),
+ ("M14", "NotCharging ignores the UDC gate", 'return not udc_configured', 'return true'),
+ ("M15", "Keep-awake never restored", 'if v ~= nil then self.env.lipc.set_int', 'if false then self.env.lipc.set_int'),
+ ("M16", "Syslog baseline ignored (reads whole log)", '(self.baseline or 0) + 1', '1'),
+ ("M17", "Dropout test on nil instead of 0", 'if started == 0 then', 'if started == nil then'),
+ ("M18", "UDC hint disabled", 'return self.udc_seen and started == 1', 'return false'),
+ ("M19", "Release deletes another owner's marker", '        self:restore_keep_awake(false)\n        self.state = "idle"\n        return "released"', '        self.env.remove(M.MARKER)\n        self:restore_keep_awake(false)\n        self.state = "idle"\n        return "released"'),
+ ("M20", "Probe reports the last failure", 'if not c[2] and result.ok then', 'if not c[2] then'),
+ ("M21", "GetConnectionUnixProcessID parser broken", '"\\n%s*uint32 (%d+)"', '"\\n%s*int32 (%d+)"'),
+ ("M22", "sh ignores the exit code", 'return body, rc == "0"', 'return body, true'),
+ ("M23", "lipc fallback drops -i", '"lipc-set-prop -i %s %s %d"', '"lipc-set-prop %s %s %d"'),
+ ("M24", "Auto-start also in the reader", 'enabled == true and in_filemanager == true and not active', 'enabled == true and not active'),
+ ("M25", "Crash leftover keeps preventScreenSaver 1", 'if v == nil and plugin_marker then v = 0 end', ''),
+ ("M26", "Host check after the timeout check", None, None),
+]
+env = dict(os.environ)
+orig = open(os.path.join(ROOT, F)).read()
+res = []
+for mid, desc, old, new in M:
+    src = orig
+    if mid == "M26":
+        a = '    if self:host_configured(started) then'
+        i = src.index(a); j = src.index('    if self.env.now() - self.started_at >= M.TIMEOUT then'); k = src.index('    return nil\nend\n\n--- Tears down')
+        src = src[:i] + src[j:k] + src[i:j] + src[k:]
+    else:
+        assert src.count(old) == 1, (mid, src.count(old))
+        src = src.replace(old, new)
+    line = orig[:orig.index(old if old else '    if self:host_configured(started) then')].count("\n") + 1
+    open(os.path.join(ROOT, F), "w").write(src)
+    out = subprocess.run("busted -o junit", shell=True, cwd=ROOT, capture_output=True, text=True, env=env).stdout
+    open(os.path.join(ROOT, F), "w").write(orig)
+    failed = [re.search(r"name='[^']*?((?:EP|BVA|DT|ST|AC|EG)-[RTI]?\d+)", a).group(1)
+              for a in re.findall(r"<testcase ([^>]*[^/])>\s*<(?:failure|error)", out)]
+    res.append({"id": mid, "desc": desc, "line": f"{F}:{line}", "killed": bool(failed), "tests": sorted(set(failed))})
+    print(mid, "KILLED" if failed else "SURVIVED", len(failed), " ".join(sorted(set(failed))[:8]))
+if len(sys.argv) > 1:
+    json.dump(res, open(sys.argv[1], "w"), indent=1)
+sys.exit(0 if all(r["killed"] for r in res) else 1)
