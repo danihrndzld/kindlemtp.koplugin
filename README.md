@@ -161,7 +161,7 @@ Details that matter:
 - **The drive-mode signal is sent only to the responder** (`--dest=`). A broadcast also reaches `cmd`, which turns Wi-Fi off, and `blanket`, which draws the stock USB screen over KOReader.
 - **`lipc-send-event` cannot send it**, because it would have to register as `com.lab126.volumd`, a name the paused `volumd` still owns. The responder's lipc subscription matches only the interface and member name, not the sender, so a plain D-Bus signal works.
 - **Destination.** `tizen-mtp` opens lipc as `com.lab126.mtp` and so owns that D-Bus name. If it is not in `ListNames`, the plugin finds the responder's unique name (`:1.N`) by comparing `GetConnectionUnixProcessID` with `pidof tizen-mtp`.
-- **Detecting the computer.** The responder goes from state 1 to state 2 in under a second. The plugin records the line count of `/var/log/messages` before Start and then, every 250 ms, looks for a new `mtp-responder` line containing `handled state_change_event [12] event [2] current mtp state`. As a second signal it also watches the gadget's `UDC` file go from bound to empty.
+- **Detecting the computer.** The responder goes from state 1 to state 2 in under a second. The plugin records the line count of `/var/log/messages` before Start and then, every 250 ms, looks for a new `mtp-responder` line containing `handled state_change_event [12] event [2] current mtp state`. As a second signal it also watches the gadget's `UDC` file go from bound to empty. It reads `isMtpStarted` at most once per second, because a lipc read can block for up to 10 seconds when the responder hangs.
 - **Stopping needs both commands.** `stopMtp` from state 3 does not unbind the USB gadget, so the plugin also runs `mtp.sh udc disable`.
 - **The marker file** `/tmp/kindlemtp.active` holds one line, `owner=plugin pid=<N> since=<epoch>`, created atomically with the shell's noclobber option. The KOBridge desktop app uses the same file, so the two never run a transfer at the same time. A marker only counts while `lipc-get-prop com.lab126.mtp isMtpStarted` reads 1.
 - **Before Start** the plugin runs 7 checks: the device is a Kindle; `/usr/bin/mtp.sh` exists; `/sys/kernel/config/usb_gadget/mtpgadget` exists; `tizen-mtp` is running; `/usr/bin/dbus-send` exists; `com.lab126.mtp` answers over lipc; and `volumd` is paused (`VOLUMD_STOPPED=yes` from the launcher, or state `T` in `/proc/<pid>/stat`).
@@ -199,7 +199,7 @@ Run this list on a real Kindle before each release, and when reporting a new mod
 
 ## Development
 
-The core (`kindlemtp_core.lua`) takes all its side effects through an injected `env` table (shell commands, file access, lipc, clock, charging state, logging), so its tests run on any computer with LuaJIT. The tests use a fake env that records every command in order (`spec/fake_env.lua`) and device outputs in `spec/fixtures/`.
+The core (`kindlemtp_core.lua`) takes all its side effects through an injected `env` table (shell commands, file access, lipc, clock, charging state, logging), so its tests run on any computer with LuaJIT. The tests use a fake env that records every command in order (`spec/fake_env.lua`) and device outputs in `spec/fixtures/`. `main.lua` is tested by loading it with stub KOReader modules (`spec/koreader_stubs.lua`) that record each dialog, message and scheduled call.
 
 Install the tools once (macOS with Homebrew LuaJIT shown; on Linux drop `--lua-dir`):
 
@@ -220,7 +220,7 @@ luacheck kindlemtp.koplugin spec
 
 Every test name starts with a test-design ID (`EP-` equivalence partition, `BVA-` boundary value, `DT-R` decision-table rule, `ST-T`/`ST-I` valid and invalid state transition, `AC-` criterion from the design, `EG-` error guess).
 
-Mutation check (breaks 26 key behaviors in `kindlemtp_core.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
+Mutation check (breaks 36 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
 
 ```sh
 python3 spec/mutate.py docs/test-report/mutants.json
