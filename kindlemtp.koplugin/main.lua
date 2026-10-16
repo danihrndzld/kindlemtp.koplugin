@@ -23,6 +23,10 @@ local time = require("ui/time")
 local _ = require("gettext")
 local Mtp = require("kindlemtp_core")
 
+-- MTP writes /mnt/base-us; KOReader reads /mnt/us through fsp, which can still list a file deleted
+-- over MTP for about 1 s (measured 2026-10-16). Refresh the file browser after that.
+local REFRESH_DELAY = 1
+
 -- Wait after Charging before an auto-start, so the responder has seen the cable (usb_plugin) first.
 local AUTOSTART_DELAY = 2
 
@@ -114,7 +118,10 @@ local function finish(reason, skip_refresh)
         UIManager:close(dialog)
         dialog = nil
     end
-    if not skip_refresh then refreshFileManager() end
+    if not skip_refresh then
+        UIManager:unschedule(refreshFileManager)
+        UIManager:scheduleIn(REFRESH_DELAY, refreshFileManager)
+    end
     if reason and not (reason == "timeout" and auto_started) then
         showReason(reason)
     end

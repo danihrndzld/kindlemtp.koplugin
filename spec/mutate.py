@@ -52,6 +52,7 @@ M += [
  ("M33", "Settings not flushed before Start", '    UIManager:flushSettings()\n', '', MAIN),
  ("M34", "Load-time probe reads lipc", 'local probe_result = core:probe(true, true)', 'local probe_result = core:probe(true)', MAIN),
  ("M35", "PluginShare never restored", '    PluginShare.keepalive = saved_share.keepalive\n', '', MAIN),
+ ("M43", "File browser refreshed at once, before fsp catches up", 'UIManager:scheduleIn(REFRESH_DELAY, refreshFileManager)', 'refreshFileManager()', MAIN),
  ("M36", "Auto-start ignores that the file manager closed during the delay", 'if fm and not core:active()', 'if not core:active()', MAIN),
 ]
 env = dict(os.environ)

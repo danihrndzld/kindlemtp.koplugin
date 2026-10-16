@@ -119,6 +119,11 @@ function S.load(opts)
         return job.s
     end
 
+    --- Runs every scheduled function (the delayed refresh, for instance).
+    function k.run_all()
+        while #k.scheduled > 0 do k.run_next() end
+    end
+
     function k.has(prefix)
         for _, l in ipairs(k.log) do
             if l:sub(1, #prefix) == prefix then return true end
