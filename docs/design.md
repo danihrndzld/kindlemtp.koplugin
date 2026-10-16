@@ -88,7 +88,8 @@ local env = {
   getenv = function(name) return value end,
   lipc = { set_int = fn, get_int = fn },        -- liblipclua or lipc-set-prop fallback
   charging = function() return bool end,        -- Device.powerd:isCharging()
-  now = function() return seconds end,
+  now = function() return seconds end,         -- monotonic, for the 20 s timeout and polling
+  epoch = function() return seconds end,       -- device wall clock (os.time()), for the marker's since=
   log = function(level, msg) end,
 }
 ```
@@ -120,8 +121,9 @@ States: `idle → starting → waiting_host → connected → stopping → idle`
 ### Marker contract (shared with KOBridge)
 
 - Path `/tmp/kindlemtp.active`, one line: `owner=plugin|kobridge pid=<N> since=<epoch>`.
-- Created atomically (`set -C; echo … > file`), before any command reaches the responder. Valid only while `isMtpStarted` reads 1; otherwise stale and removed by whoever reads it.
-- Start refuses when a valid marker has another owner. Stop always tears down, whatever the owner.
+- Created atomically (`set -C; echo … > file`), before any command reaches the responder. `since` comes from the Kindle's own clock on both sides (the plugin's `os.time()`, KOBridge's `date +%s` run on the device), so ages compare on one clock.
+- Stale rule (revised 2026-10-16): a marker is stale only when `isMtpStarted` reads 0 **and** `since` is at least 30 s old. Only a stale marker may be removed by the other side. 30 s covers the 20 s host wait plus margin, and closes the window between a fresh claim and its `startMtp`, when `isMtpStarted` still reads 0. The pid is not used (KOBridge's is a dead shell pid). A marker with an unparsable or future `since` counts as fresh. A failed `isMtpStarted` read refuses Start (`no_lipc`) and keeps the marker.
+- Start refuses when a fresh marker exists: `owner_other` for another owner, `already_active` for the plugin's own. Stop always tears down, whatever the owner.
 - The plugin's poll closes its dialog when the marker disappears or `isMtpStarted` drops to 0 (KOBridge stopped it).
 
 ### Host detection

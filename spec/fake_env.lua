@@ -48,6 +48,7 @@ function F.new()
         udc_state = "not attached",
         is_charging = true,
         t = 0,
+        wall = 1792000000, -- device clock (epoch seconds), later than every fixture marker
         signal_ok = true,
         start_ok = true,
         write_ok = true,
@@ -147,6 +148,7 @@ function F.new()
     function e.getenv(name) return e.vars[name] end
     function e.charging() return e.is_charging end
     function e.now() return e.t end
+    function e.epoch() return e.wall end
     function e.log(level, msg) e.logs[#e.logs + 1] = level .. " " .. msg end
 
     --- Side effects only (sh, lipc set, write, remove) as "kind text" strings.

@@ -39,6 +39,9 @@ M = [
  ("M38", "Reset before the marker claim", '    -- The marker is the lock shared with KOBridge: take it before touching the responder.\n',
   '    self:sh(M.MTP_SH .. " udc disable")\n    env.lipc.set_int(M.BUS, "stopMtp", 1)\n'),
  ("M39", "A failed claim tears down", '        self:log("warn", "failed: marker_failed")\n', '        self:stop()\n'),
+ ("M40", "Marker stale one second late (> instead of >=)", 'epoch - since >= M.STALE_AFTER', 'epoch - since > M.STALE_AFTER'),
+ ("M41", "Marker age ignored (stale whenever isMtpStarted is 0)", 'return since ~= nil and since <= epoch and epoch - since >= M.STALE_AFTER', 'return true'),
+ ("M42", "Marker since not taken from the device clock", 'pid=%d since=%d\\n", self.pid, env.epoch())', 'pid=%d since=%d\\n", self.pid, env.epoch() - 1)'),
  ("M26", "Host check after the timeout check", None, None),
 ]
 MAIN = "kindlemtp.koplugin/main.lua"

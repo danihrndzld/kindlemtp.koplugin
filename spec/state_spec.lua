@@ -103,6 +103,58 @@ describe("start", function()
         assert.are.same({}, e.actions())
     end)
 
+    it("BVA-09 a KOBridge marker 29 s old with isMtpStarted 0 is fresh: owner_other, kept, nothing sent", function()
+        local core, e = F.core(function(e)
+            e.contents[Mtp.MARKER] = "owner=kobridge pid=900 since=" .. (e.wall - 29) .. "\n"
+        end)
+        assert.are.same({ nil, "owner_other" }, { core:start() })
+        assert.is_not_nil(e.contents[Mtp.MARKER])
+        assert.are.same({}, e.actions())
+    end)
+
+    it("BVA-10 a KOBridge marker 30 s old with isMtpStarted 0 is stale: removed, start goes on", function()
+        local core, e = F.core(function(e)
+            e.contents[Mtp.MARKER] = "owner=kobridge pid=900 since=" .. (e.wall - 30) .. "\n"
+        end)
+        assert.is_true(core:start())
+        assert.are.equal("remove /tmp/kindlemtp.active", e.actions()[1])
+    end)
+
+    it("BVA-11 a KOBridge marker 31 s old with isMtpStarted 0 is stale", function()
+        local core = F.core(function(e)
+            e.contents[Mtp.MARKER] = "owner=kobridge pid=900 since=" .. (e.wall - 31) .. "\n"
+        end)
+        assert.is_true(core:start())
+    end)
+
+    it("BVA-12 a marker whose since is in the future counts as fresh", function()
+        local core, e = F.core(function(e)
+            e.contents[Mtp.MARKER] = "owner=kobridge pid=900 since=" .. (e.wall + 3600) .. "\n"
+        end)
+        assert.are.same({ nil, "owner_other" }, { core:start() })
+        assert.are.same({}, e.actions())
+    end)
+
+    it("EP-53 a marker with an unparsable since counts as fresh", function()
+        local core, e = F.core(function(e)
+            e.contents[Mtp.MARKER] = "owner=kobridge pid=900 since=soon\n"
+        end)
+        assert.are.same({ nil, "owner_other" }, { core:start() })
+        assert.are.equal("owner=kobridge pid=900 since=soon\n", e.contents[Mtp.MARKER])
+    end)
+
+    it("EP-54 a fresh plugin marker with isMtpStarted 0 refuses with already_active", function()
+        local core = F.core(function(e)
+            e.contents[Mtp.MARKER] = "owner=plugin pid=4321 since=" .. (e.wall - 2) .. "\n"
+        end)
+        assert.are.same({ nil, "already_active" }, { core:start() })
+    end)
+
+    it("AC-20 the marker's since comes from the device clock", function()
+        local _, e = F.waiting()
+        assert.matches("since=" .. e.wall .. "\n$", e.contents[Mtp.MARKER])
+    end)
+
     it("DT-R54 no power refuses with no_power and touches nothing", function()
         local core, e = F.core(function(e) e.is_charging = false end)
         assert.are.same({ nil, "no_power" }, { core:start() })

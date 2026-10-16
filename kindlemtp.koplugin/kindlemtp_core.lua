@@ -13,6 +13,9 @@ M.__index = M
 
 M.POLL_INTERVAL = 0.25 -- seconds between poll() calls
 M.TIMEOUT = 20 -- seconds to wait for a host after startMtp
+-- A marker only goes stale this long after its `since` (device clock), so a session that has
+-- claimed the marker but not yet sent startMtp is never taken for a leftover. Covers TIMEOUT plus margin.
+M.STALE_AFTER = 30
 -- A lipc property read can block for liblipc's 10 s timeout when the responder hangs,
 -- so poll() reads isMtpStarted at most this often (seconds).
 M.LIPC_INTERVAL = 1
@@ -66,6 +69,14 @@ function M.proc_state(text)
 end
 
 --- `owner=<o> pid=<n> since=<epoch>` -> table, nil when missing or malformed.
+--- Stale marker rule shared with KOBridge: isMtpStarted reads 0 and `since` is at least STALE_AFTER
+--- seconds old on the device clock. Unparsable or future `since` counts as fresh.
+function M.marker_stale(text, started, epoch)
+    if started ~= 0 then return false end
+    local since = tonumber(trim(text):match("since=(%d+)$"))
+    return since ~= nil and since <= epoch and epoch - since >= M.STALE_AFTER
+end
+
 function M.parse_marker(text)
     local owner, pid, since = trim(text):match("^owner=(%S+) pid=(%d+) since=(%d+)$")
     if not owner then return nil end
@@ -194,11 +205,11 @@ function M:start()
     if text then
         local marker = M.parse_marker(text)
         local started = self:started()
-        if started == 1 then
+        -- A failed read keeps the marker.
+        if started == nil then return nil, "no_lipc" end
+        if not M.marker_stale(text, started, env.epoch()) then
             return nil, (marker and marker.owner == "plugin") and "already_active" or "owner_other"
         end
-        -- Only an explicit 0 makes the marker stale; a failed read keeps it.
-        if started == nil then return nil, "no_lipc" end
         self:log("info", "removing stale marker: " .. trim(text))
         env.remove(M.MARKER)
         stale_plugin = marker ~= nil and marker.owner == "plugin"
@@ -207,7 +218,7 @@ function M:start()
 
     self.state, self.error = "starting", nil
     -- The marker is the lock shared with KOBridge: take it before touching the responder.
-    local line = string.format("owner=plugin pid=%d since=%d\n", self.pid, os.time())
+    local line = string.format("owner=plugin pid=%d since=%d\n", self.pid, env.epoch())
     if not env.write(M.MARKER, line, true) then
         local other = M.parse_marker(env.read(M.MARKER))
         if other and other.owner ~= "plugin" then
@@ -335,6 +346,7 @@ function M.posix_env(o)
     local env = {
         getenv = os.getenv,
         now = o.now or os.time,
+        epoch = os.time, -- device wall clock, for the marker's since=
         charging = o.charging or function() return false end,
         log = o.log or function() end,
     }
