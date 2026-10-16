@@ -1,4 +1,4 @@
-"""Mutation check: applies each mutant to kindlemtp_core.lua, runs busted, restores the file.
+"""Mutation check: applies each mutant to kindlemtp_core.lua or main.lua, runs busted, restores the file.
 
 Usage (repo root, busted on PATH): python3 spec/mutate.py [results.json]
 Exits 1 if any mutant survives.
@@ -37,10 +37,21 @@ M = [
  ("M29", "Load-time probe still reads lipc", 'skip_lipc == true or self:started() ~= nil', 'self:started() ~= nil'),
  ("M26", "Host check after the timeout check", None, None),
 ]
+MAIN = "kindlemtp.koplugin/main.lua"
+M += [
+ ("M30", "CloseWidget refreshes a closing browser", 'finish(nil, event == "CloseWidget")', 'finish()', MAIN),
+ ("M31", "No repaint before Reset", '                            UIManager:forceRePaint()\n', '', MAIN),
+ ("M32", "NotCharging ignores the UDC state", 'event == "NotCharging" and active and core:udc_configured()', 'false', MAIN),
+ ("M33", "Settings not flushed before Start", '    UIManager:flushSettings()\n', '', MAIN),
+ ("M34", "Load-time probe reads lipc", 'local probe_result = core:probe(true, true)', 'local probe_result = core:probe(true)', MAIN),
+ ("M35", "PluginShare never restored", '    PluginShare.keepalive = saved_share.keepalive\n', '', MAIN),
+ ("M36", "Auto-start ignores that the file manager closed during the delay", 'if fm and not core:active()', 'if not core:active()', MAIN),
+]
 env = dict(os.environ)
-orig = open(os.path.join(ROOT, F)).read()
 res = []
-for mid, desc, old, new in M:
+for mid, desc, old, new, *target in M:
+    F = target[0] if target else "kindlemtp.koplugin/kindlemtp_core.lua"
+    orig = open(os.path.join(ROOT, F)).read()
     src = orig
     if mid == "M26":
         a = '    if self:host_configured(started) then'
