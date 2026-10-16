@@ -1,0 +1,4 @@
+return {
+  _all = { lpath = "kindlemtp.koplugin/?.lua;spec/?.lua" },
+  default = { ROOT = { "spec" }, pattern = "_spec" },
+}
