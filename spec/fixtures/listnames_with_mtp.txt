@@ -1,0 +1,21 @@
+method return time=1760557063.482113 sender=org.freedesktop.DBus -> destination=:1.61 serial=3 reply_serial=2
+   array [
+      string "org.freedesktop.DBus"
+      string ":1.0"
+      string "com.lab126.powerd"
+      string ":1.1"
+      string "com.lab126.hal"
+      string ":1.2"
+      string "com.lab126.volumd"
+      string ":1.3"
+      string "com.lab126.mtp"
+      string ":1.4"
+      string "com.lab126.cmd"
+      string ":1.5"
+      string "com.lab126.wifid"
+      string ":1.7"
+      string "com.lab126.blanket"
+      string ":1.9"
+      string "com.lab126.appmgrd"
+      string ":1.61"
+   ]

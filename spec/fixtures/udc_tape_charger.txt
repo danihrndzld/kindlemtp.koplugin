@@ -1,0 +1,4 @@
+# t (s since startMtp), gadget UDC file, /sys/class/udc/*/state, isMtpStarted
+t=0.00 udc=[] state=not attached started=1
+t=0.25 udc=[11211000.usb] state=powered started=1
+t=20.00 udc=[11211000.usb] state=powered started=1

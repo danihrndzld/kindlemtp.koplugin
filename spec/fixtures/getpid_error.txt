@@ -1,0 +1,1 @@
+Error org.freedesktop.DBus.Error.NameHasNoOwner: Could not get PID of name ':1.99': no such name
