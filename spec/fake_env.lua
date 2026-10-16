@@ -39,7 +39,7 @@ function F.new()
         contents = {},
         vars = { VOLUMD_STOPPED = "yes" },
         props = { ["com.lab126.mtp isMtpStarted"] = 0, ["com.lab126.powerd preventScreenSaver"] = 0 },
-        pids = { ["tizen-mtp"] = "5225", volumd = "2187" },
+        pids = { ["tizen-mtp"] = "5225", volumd = "5237" },
         listnames = F.fixture("listnames_with_mtp.txt"),
         listnames_ok = true,
         getpid = { [":1.3"] = F.fixture("getpid_tizen_mtp.txt") },

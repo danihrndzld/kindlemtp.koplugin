@@ -1,6 +1,33 @@
-# t (s since startMtp), gadget UDC file, /sys/class/udc/*/state, isMtpStarted
+# Captured 2026-10-16 05:54 on a Paperwhite 5.18.5 (device-checks.sh, host detection trace).
+# t = loop index x 0.25: the loop's 'sleep 0.5' failed on BusyBox, so the real spacing is shorter.
+# t, gadget UDC file, /sys/class/udc/*/state, isMtpStarted
 t=0.00 udc=[] state=not attached started=1
-t=0.25 udc=[11211000.usb] state=configured started=1
+t=0.25 udc=[] state=not attached started=1
 t=0.50 udc=[] state=not attached started=1
-t=0.75 udc=[] state=not attached started=1
-t=1.00 udc=[11211000.usb] state=configured started=1
+t=0.75 udc=[11211000.usb] state=not attached started=1
+t=1.00 udc=[11211000.usb] state=not attached started=1
+t=1.25 udc=[11211000.usb] state=not attached started=1
+t=1.50 udc=[11211000.usb] state=not attached started=1
+t=1.75 udc=[11211000.usb] state=not attached started=1
+t=2.00 udc=[11211000.usb] state=not attached started=1
+t=2.25 udc=[11211000.usb] state=not attached started=1
+t=2.50 udc=[11211000.usb] state=configured started=1
+t=2.75 udc=[11211000.usb] state=configured started=1
+t=3.00 udc=[] state=not attached started=1
+t=3.25 udc=[] state=not attached started=1
+t=3.50 udc=[] state=not attached started=1
+t=3.75 udc=[] state=not attached started=1
+t=4.00 udc=[] state=not attached started=1
+t=4.25 udc=[] state=not attached started=1
+t=4.50 udc=[] state=not attached started=1
+t=4.75 udc=[] state=not attached started=1
+t=5.00 udc=[] state=not attached started=1
+t=5.25 udc=[] state=not attached started=1
+t=5.50 udc=[] state=not attached started=1
+t=5.75 udc=[] state=not attached started=1
+t=6.00 udc=[] state=not attached started=1
+t=6.25 udc=[] state=not attached started=1
+t=6.50 udc=[] state=not attached started=1
+t=6.75 udc=[] state=not attached started=1
+t=7.00 udc=[] state=not attached started=1
+t=7.25 udc=[] state=not attached started=1

@@ -1,0 +1,45 @@
+261015:193743 mtp-responder[5225]: set_debug_log : callback received
+261015:193743 mtp-responder[5225]: enabled debug logs
+261015:193743 mtp-responder[5225]: start MTP callback received
+261015:193743 mtp-responder[5225]: mtp-state 4
+261015:193743 mtp-responder[5225]: action[11], param1[0], param2[0]
+261015:193743 mtp-responder[5225]: __process_event_request entered.
+261015:193743 mtp-responder[5225]: EVENT_PC_DETECT entered.
+261015:193743 mtp-responder[5225]: should_process_event [11] event
+261015:193743 mtp-responder[5225]: FFS driver selected
+261015:193743 mtp-responder[5225]: Inside _transport_minimal_init_usb_plugin_ep0
+261015:193743 mtp-responder[5225]: _transport_init_minimal: created control thread
+261015:193743 mtp-responder[5225]: handle_state_change_event [11] event
+261015:193743 mtp-responder[5225]: Enabling MTP Gadget
+261015:193743 mtp-responder[5225]: FUNCTIONFS event received: 1
+261015:193743 mtp-responder[5225]: UNBIND : skipping this event
+261015:193743 mtp-responder[5225]: FUNCTIONFS event received: 0
+261015:193743 mtp-responder[5225]: BIND
+261015:193743 mtp-responder[5225]: Enabled MTP Gadget
+261015:193743 mtp-responder[5225]: handled state_change_event [11] event [1] current mtp state
+261015:193743 mtp-responder[5225]: __process_event_request exited.
+261015:193743 mtp-responder[5225]: FUNCTIONFS event received: 2
+261015:193743 mtp-responder[5225]: action[12], param1[0], param2[0]
+261015:193743 mtp-responder[5225]: __process_event_request entered.
+261015:193743 mtp-responder[5225]: EVENT_PC_CONNECTED entered. 
+261015:193743 mtp-responder[5225]: should_process_event [12] event
+261015:193743 mtp-responder[5225]: Disabling MTP Gadget
+261015:193743 mtp-responder[5225]: FUNCTIONFS event received: 3
+261015:193743 mtp-responder[5225]: action[13], param1[0], param2[0]
+261015:193743 mtp-responder[5225]: FUNCTIONFS event received: 1
+261015:193743 mtp-responder[5225]: UNBIND : skipping this event
+261015:193743 mtp-responder[5225]: Disabled MTP Gadget
+261015:193743 mtp-responder[5225]: Inside _transport_minimal_deinit_ep0
+261015:193743 mtp-responder[5225]: Cancelling ctrl thread
+261015:193743 mtp-responder[5225]: Succeed to cancel pthread of g_ctrl_thrd
+261015:193743 mtp-responder[5225]: (mq_id == NULL)
+261015:193743 mtp-responder[5225]: _transport_deinit_minimal: canceled control thread
+261015:193743 mtp-responder[5225]: _transport_deinit_minimal: not closing ffs epx
+261015:193743 mtp-responder[5225]: handle_state_change_event [12] event
+261015:193743 mtp-responder[5225]: handled state_change_event [12] event [2] current mtp state
+261015:193743 mtp-responder[5225]: __process_event_request exited.
+261015:193743 mtp-responder[5225]: __process_event_request entered.
+261015:193743 mtp-responder[5225]: EVENT_PC_DISCONNECTED entered. 
+261015:193743 mtp-responder[5225]: should_process_event [13] event
+261015:193743 mtp-responder[5225]: Skipping event [13], current status usb_plugin [1] mtp_state [2]
+261015:193743 mtp-responder[5225]: __process_event_request exited.

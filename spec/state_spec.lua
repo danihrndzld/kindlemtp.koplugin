@@ -291,26 +291,30 @@ describe("poll", function()
         end
     end)
 
-    it("AC-06 host tape with syslog: connected at t=0.5", function()
-        local core, e = F.waiting()
-        local tape = F.tape("udc_tape_host.txt")
-        local got
-        for i = 2, 3 do
-            e.apply(tape[i])
-            if tape[i].t == 0.5 then host(e) end
-            got = core:poll()
+-- Replays the captured host tape; the state-2 line is logged when the gadget unbinds (t=3.00).
+local function replay(core, e, with_syslog)
+    local seen_bound
+    for _, row in ipairs(F.tape("udc_tape_host.txt")) do
+        e.apply(row)
+        if row.udc ~= "" then seen_bound = true end
+        if with_syslog and seen_bound and row.udc == "" and not e.logged then
+            host(e)
+            e.logged = true
         end
-        assert.are.equal("connected", got)
+        local event = core:poll()
+        if event then return event, row.t end
+    end
+end
+
+    it("AC-06 captured host tape with syslog: connected when the gadget unbinds (t=3.00)", function()
+        local core, e = F.waiting()
+        assert.are.same({ "connected", 3 }, { replay(core, e, true) })
         assert.are.equal(1, #e.signals())
     end)
 
-    it("AC-07 UDC hint alone (bound, then empty) also means a host", function()
+    it("AC-07 UDC hint alone on the captured tape (bound, then empty) also means a host", function()
         local core, e = F.waiting()
-        local tape = F.tape("udc_tape_host.txt")
-        e.apply(tape[2])
-        assert.is_nil(core:poll())
-        e.apply(tape[3])
-        assert.are.equal("connected", core:poll())
+        assert.are.same({ "connected", 3 }, { replay(core, e, false) })
     end)
 
     it("EG-04 a state-2 line from an earlier session never counts", function()

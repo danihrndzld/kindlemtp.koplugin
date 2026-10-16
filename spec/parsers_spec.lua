@@ -5,9 +5,9 @@ local F = require("fake_env")
 describe("parsers", function()
     it("EP-01 ListNames reply lists every name, com.lab126.mtp included", function()
         local names = Mtp.parse_names(F.fixture("listnames_with_mtp.txt"))
-        assert.are.equal(18, #names)
+        assert.are.equal(92, #names)
         assert.are.equal("org.freedesktop.DBus", names[1])
-        assert.are.equal("com.lab126.mtp", names[9])
+        assert.are.equal("com.lab126.mtp", names[10])
     end)
 
     it("EP-02 a ListNames error or garbage gives no names", function()
@@ -41,7 +41,7 @@ describe("parsers", function()
         assert.are.equal("T", Mtp.proc_state(F.fixture("proc_stat_T.txt")))
     end)
 
-    it("EP-09 /proc stat of a sleeping volumd reads S", function()
+    it("EP-09 /proc stat of a running process (tizen-mtp, captured) reads S", function()
         assert.are.equal("S", Mtp.proc_state(F.fixture("proc_stat_S.txt")))
     end)
 
@@ -55,6 +55,11 @@ describe("parsers", function()
 
     it("EP-11 syslog tail with the state-2 line means a host", function()
         assert.is_true(Mtp.host_seen(F.fixture("syslog_state2.txt")))
+    end)
+
+    it("EP-55 the full captured run (debug logs off) and the debug-on log both hold a host", function()
+        assert.is_true(Mtp.host_seen(F.fixture("syslog_full_run.txt")))
+        assert.is_true(Mtp.host_seen(F.fixture("syslog_debug_on.txt")))
     end)
 
     it("EP-12 syslog tail that stops at state 1 means no host", function()

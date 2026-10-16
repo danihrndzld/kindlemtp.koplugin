@@ -1,0 +1,60 @@
+261016:055534 mtp-responder[5225]: handle_state_change_event [15] event
+261016:055534 mtp-responder[5225]: handled state_change_event [15] event [4] current mtp state
+261016:055534 mtp-responder[5225]: handle_state_change_event [3] event
+261016:055534 mtp-responder[5225]: handle_state_change_event not handled for event [3]
+261016:055543 mtp-responder[5225]: stop MTP callback received
+261016:055543 mtp-responder[5225]: action[15], param1[0], param2[0]
+261016:055543 mtp-responder[5225]: handle_state_change_event [15] event
+261016:055543 mtp-responder[5225]: Unexpected mtp state: 4
+261016:055543 mtp-responder[5225]: start MTP callback received
+261016:055543 mtp-responder[5225]: action[11], param1[0], param2[0]
+261016:055543 mtp-responder[5225]: should_process_event [11] event
+261016:055543 mtp-responder[5225]: handle_state_change_event [11] event
+261016:055543 mtp-responder[5225]: Enabling MTP Gadget
+261016:055543 mtp-responder[5225]: Enabled MTP Gadget
+261016:055543 mtp-responder[5225]: handled state_change_event [11] event [1] current mtp state
+261016:055543 mtp-responder[5225]: should_process_event [12] event
+261016:055543 mtp-responder[5225]: Disabling MTP Gadget
+261016:055543 mtp-responder[5225]: Disabled MTP Gadget
+261016:055543 mtp-responder[5225]: (mq_id == NULL)
+261016:055543 mtp-responder[5225]: handle_state_change_event [12] event
+261016:055543 mtp-responder[5225]: handled state_change_event [12] event [2] current mtp state
+261016:055543 mtp-responder[5225]: usb drive mode state change to DRIVE_MODE_ON received
+261016:055543 mtp-responder[5225]: action[14], param1[0], param2[0]
+261016:055543 mtp-responder[5225]: E def:metrics:FM Metrics Emission:status :4
+261016:055543 mtp-responder[5225]: should_process_event [14] event
+261016:055543 mtp-responder[5225]: Unknown option : fake_copy
+261016:055543 mtp-responder[5225]: Unknown option : write_to
+261016:055543 mtp-responder[5225]: Unknown option : read_from
+261016:055543 mtp-responder[5225]: handle_state_change_event [14] event
+261016:055543 mtp-responder[5225]: Enabling MTP Gadget
+261016:055543 mtp-responder[5225]: Enabled MTP Gadget
+261016:055543 mtp-responder[5225]: handled state_change_event [14] event [3] current mtp state
+261016:055544 mtp-responder[5225]: should_process_event [12] event
+261016:055544 mtp-responder[5225]: Skipping event [12], current status usb_plugin [1] mtp_state [3]
+261016:055546 mtp-responder[5225]: [SUCCESS], Opcode[0x1002], ResponseCode[0x2001], NumParams[0]
+261016:055546 mtp-responder[5225]: [SUCCESS], Opcode[0x1001], ResponseCode[0x2001], NumParams[0]
+261016:055546 mtp-responder[5225]: [SUCCESS], Opcode[0x1004], ResponseCode[0x2001], NumParams[0]
+261016:055546 mtp-responder[5225]: [SUCCESS], Opcode[0x1005], ResponseCode[0x2001], NumParams[0]
+261016:055547 mtp-responder[5225]: [SUCCESS], Opcode[0x1004], ResponseCode[0x2001], NumParams[0]
+261016:055547 mtp-responder[5225]: [SUCCESS], Opcode[0x1005], ResponseCode[0x2001], NumParams[0]
+261016:055547 mtp-responder[5225]: E def:metrics:FM Metrics Emission:status :4
+261016:055547 mtp-responder[5225]: [SUCCESS], Opcode[0x1007], ResponseCode[0x2001], NumParams[0]
+261016:055548 mtp-responder[5225]: [SUCCESS], Opcode[0x1004], ResponseCode[0x2001], NumParams[0]
+261016:055548 mtp-responder[5225]: [SUCCESS], Opcode[0x1005], ResponseCode[0x2001], NumParams[0]
+261016:055556 mtp-responder[5225]: stop MTP callback received
+261016:055556 mtp-responder[5225]: action[15], param1[0], param2[0]
+261016:055556 mtp-responder[5225]: (mq_id == NULL)
+261016:055556 mtp-responder[5225]: msgrcv() Fail
+261016:055556 mtp-responder[5225]: Error: [42]:[No message of desired type]
+261016:055556 mtp-responder[5225]: msgrcv() Fail
+261016:055556 mtp-responder[5225]: Error: [42]:[No message of desired type]
+261016:055556 mtp-responder[5225]: Got NULL character in MQ
+261016:055556 mtp-responder[5225]: thread_data_rcv[3030893440] exiting
+261016:055556 mtp-responder[5225]: Disabling MTP Gadget
+261016:055556 mtp-responder[5225]: failed to exec : /bin/bash /usr/bin/mtp.sh udc disable
+261016:055556 mtp-responder[5225]: Disabled MTP Gadget
+261016:055556 mtp-responder[5225]: handle_state_change_event [15] event
+261016:055556 mtp-responder[5225]: handled state_change_event [15] event [4] current mtp state
+261016:055556 mtp-responder[5225]: handle_state_change_event [3] event
+261016:055556 mtp-responder[5225]: handle_state_change_event not handled for event [3]
