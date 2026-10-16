@@ -38,7 +38,7 @@ It also:
 
 | Device | Status |
 |---|---|
-| Kindle Paperwhite, firmware 5.18.5 (kernel 5.15.41-lab126) | The command sequence was verified by hand on 2026-10-15; the plugin itself still has to pass the [device checklist](#device-checklist-for-testers) |
+| Kindle Paperwhite, firmware 5.18.5 (kernel 5.15.41-lab126) | The command sequence was verified by hand on 2026-10-15, and the same sequence passed a live USB test from KOBridge on 2026-10-16 (responder states 4 → 1 → 2 → 3 → 4, Wi-Fi up, marker and keep-awake restored). The test fixtures are captures from this device. The plugin itself still has to pass the [device checklist](#device-checklist-for-testers) |
 | Other Kindles on firmware 5.16 or later that have `/usr/bin/mtp.sh` | Expected to work, not tested yet |
 | Kindles on firmware older than 5.16 | Not needed: they use USB mass storage, which works without this plugin |
 | Kobo, PocketBook, Android and other KOReader platforms | Not supported; the plugin disables itself |
@@ -172,7 +172,7 @@ All of this is in `kindlemtp.koplugin/kindlemtp_core.lua`, which does not depend
 ## Limits
 
 - **KOBridge's Files view and MTP see the storage through different paths.** MTP serves `/mnt/base-us` directly. KOReader and KOBridge's Files view use `/mnt/us`, which goes through the Kindle's `fsp` layer. Do not write to the same files from both at once.
-- **New files may take a moment to appear in KOReader** if `fsp` caches the folder listing. The plugin refreshes the file browser after Stop.
+- **`fsp` lags behind MTP for deletions.** A file copied over MTP shows in `/mnt/us` at once, but a file deleted over MTP can still be listed there for about 1 second (measured on 2026-10-16). The plugin refreshes the file browser 1 second after Stop for that reason.
 - **A wall charger looks like a computer** to KOReader. With "Start when plugged in" on, a charger starts a transfer that waits 20 seconds and then ends quietly.
 - **The 2-second auto-start delay** gives the responder time to notice the cable. It has not been tuned on many devices; if auto-start fails on yours but manual Start works, please report it.
 - **One computer at a time.** MTP does not allow two hosts.
@@ -221,7 +221,7 @@ luacheck kindlemtp.koplugin spec
 
 Every test name starts with a test-design ID (`EP-` equivalence partition, `BVA-` boundary value, `DT-R` decision-table rule, `ST-T`/`ST-I` valid and invalid state transition, `AC-` criterion from the design, `EG-` error guess).
 
-Mutation check (breaks 42 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
+Mutation check (breaks 43 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
 
 ```sh
 python3 spec/mutate.py docs/test-report/mutants.json
@@ -235,7 +235,7 @@ busted -c && luacov && python3 spec/luacov_summary.py docs/test-report/coverage.
 
 The test report (in Spanish, with the technique behind every test and the mutation results) is in [docs/test-report/reporte.pdf](docs/test-report/reporte.pdf).
 
-Fixtures: `syslog_state2.txt` was captured on a Paperwhite on 2026-10-15, and `syslog_no_state2.txt` is its first 21 lines. The `dbus-send` replies, `/proc` stat lines and UDC tapes are written by hand in the devices' formats and still need to be replaced with captures.
+Fixtures: the `dbus-send` replies, `/proc` stat lines, syslog lines (with debug logs off) and the host UDC tape were captured on a Paperwhite on 2026-10-16. Three files stay synthetic: `listnames_without_mtp.txt` (for the `:1.N` fallback), `getpid_other.txt` and the charger-only UDC tape. [spec/fixtures/README.md](spec/fixtures/README.md) lists the source of each file.
 
 GitHub Actions runs busted and luacheck on every push and pull request. Pushing a tag such as `v1.0.0` builds `kindlemtp.koplugin.zip` and publishes a release. Avoid `alpha`, `beta`, `rc`, `dev`, `preview` and `test` in tag names; Storefront treats those as pre-releases. To check the zip locally:
 

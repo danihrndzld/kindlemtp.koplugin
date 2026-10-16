@@ -25,7 +25,7 @@ KOReader's launcher (`platform/kindle/koreader.sh`) sends SIGSTOP to `volumd` in
 
 - The drive-mode signal must be **unicast**. A broadcast also reaches `cmd`, which turns Wi-Fi off, and `blanket`, which draws the stock USB screen over KOReader. Both were observed.
 - `lipc-send-event` cannot send it: it must `LipcOpen("com.lab126.volumd")`, a name the stopped `volumd` still owns. liblipc subscribers match only interface and member, never the sender, so a plain D-Bus signal is accepted.
-- Destination: `--dest=com.lab126.mtp`. liblipc's open path calls `dbus_bus_request_name` on the source name, and libmtp-helper opens lipc as `com.lab126.mtp`, so `tizen-mtp` owns that well-known name (to confirm with `ListNames`). Fallback only: match `GetConnectionUnixProcessID` of each `:1.N` against `pidof tizen-mtp` (`:1.3` on 2026-10-15; changes per boot).
+- Destination: `--dest=com.lab126.mtp`. liblipc's open path calls `dbus_bus_request_name` on the source name, and libmtp-helper opens lipc as `com.lab126.mtp`, so `tizen-mtp` owns that well-known name (confirmed with `ListNames` on 2026-10-16). Fallback only: match `GetConnectionUnixProcessID` of each `:1.N` against `pidof tizen-mtp` (`:1.3` on 2026-10-15; changes per boot).
 - MTP serves `/mnt/base-us` directly, bypassing the `fsp` FUSE layer that KOReader reads at `/mnt/us`.
 
 ## Scope
@@ -130,7 +130,7 @@ States: `idle → starting → waiting_host → connected → stopping → idle`
 
 The responder goes 1 → 2 within one second (19:37:43 in `mtp-startmtp-log.txt`), and the UDC file is empty both before the bind and at state 2, so polling the UDC file can't see "bound, then empty".
 
-- Primary: record `wc -l < /var/log/messages` before `startMtp`, then poll for a new line matching `handled state_change_event \[12\] event \[2\] current mtp state`. It is logged at priority 6 outside the debug flag (libmtp-helper.c:1124). To confirm on the device without `enableDebugLog`.
+- Primary: record `wc -l < /var/log/messages` before `startMtp`, then poll for a new line matching `handled state_change_event \[12\] event \[2\] current mtp state`. It is logged at priority 6 outside the debug flag (libmtp-helper.c:1124). Confirmed on 2026-10-16 with debug logs off (`spec/fixtures/syslog_full_run.txt`).
 - Secondary hint: UDC file empty and `isMtpStarted` = 1 after having seen it bound.
 - Not used: `usbConfigured` on `com.lab126.hal`, which `mtp.sh` skips under `FLAG_NO_TRANSITIONS` / `FLAG_FONT_UPDATE`.
 
@@ -149,7 +149,17 @@ Use `pcall(require, "liblipclua")` with `lipc.init("com.github.koreader.kindlemt
 - `UIManager:flushSettings()` before Start, so `settings.reader.lua` and sidecars on disk are current.
 - The dialog blocks the menus for the whole transfer.
 - README warning: don't delete or edit the `koreader` folder from the computer while KOReader runs.
-- To verify on the device: a file copied over MTP shows in `lfs.dir("/mnt/us/…")` at once (fsp may cache attributes).
+- fsp lag (measured 2026-10-16): a file written to `/mnt/base-us` shows in `/mnt/us` at once, but a file deleted there can still be listed in `/mnt/us` for about 1 s. `refreshPath()` after stop is still right; main.lua runs it 1 s after the stop.
+
+## Device facts (2026-10-16, Paperwhite 5.18.5)
+
+- `com.lab126.mtp` is a well-known D-Bus name; `:1.3` is tizen-mtp's unique name on this boot.
+- KOReader's environment has `VOLUMD_STOPPED=yes` and `STOP_FRAMEWORK=yes`; `volumd` is in state `T`.
+- `/usr/lib/lua/liblipclua.so` exists.
+- `isMtpStarted` reads 1 while charging over USB.
+- BusyBox `sleep` takes integers only (`sleep 0.5` fails with "invalid number"); `usleep` exists. The plugin uses no shell sleep: it waits through `UIManager:scheduleIn`.
+- `dbus-send` writes error replies to stderr, with empty stdout and exit status 1.
+- KOBridge's live USB test passed: responder states 4 → 1 → 2 → 3 → 4, Wi-Fi stayed up, the marker and keep-awake were restored.
 
 ## Errors
 
