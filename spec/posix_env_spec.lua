@@ -107,9 +107,12 @@ describe("posix env", function()
         assert.are.same({}, cmds)
     end)
 
-    it("EP-52 when require('liblipclua') fails, the lipc-*-prop fallback is used", function()
-        assert.is_false((pcall(require, "liblipclua")))
+    it("EP-52 require('liblipclua') failing (forced via package.preload) selects the lipc-*-prop fallback", function()
+        local saved_loaded, saved_preload = package.loaded.liblipclua, package.preload.liblipclua
+        package.loaded.liblipclua = nil
+        package.preload.liblipclua = function() error("module 'liblipclua' not found") end
         local env = Mtp.posix_env{}
+        package.loaded.liblipclua, package.preload.liblipclua = saved_loaded, saved_preload
         local cmds = {}
         env.sh = function(cmd) cmds[#cmds + 1] = cmd; return "", true end
         env.lipc.set_int("com.lab126.mtp", "stopMtp", 1)

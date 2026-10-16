@@ -72,8 +72,10 @@ function F.new()
         end
         local name = cmd:match("GetConnectionUnixProcessID string:(%S+)$")
         if name then
-            local reply = e.getpid[name] or F.fixture("getpid_other.txt")
-            return reply, not reply:find("^Error")
+            local reply = e.getpid[name]
+            -- dbus-send prints an error reply on stderr and exits 1; sh only captures stdout.
+            if reply == false then return "", false end
+            return reply or F.fixture("getpid_other.txt"), true
         end
         if cmd:find("--type=signal", 1, true) then
             return "", e.signal_ok

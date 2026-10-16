@@ -126,10 +126,10 @@ describe("bus name", function()
         assert.are.equal(9, e.count("GetConnectionUnixProcessID"))
     end)
 
-    it("EP-23 error replies from GetConnectionUnixProcessID are skipped", function()
+    it("EP-23 failed GetConnectionUnixProcessID calls (empty stdout, exit 1) are skipped", function()
         local core = F.core(function(e)
             e.listnames = F.fixture("listnames_without_mtp.txt")
-            e.getpid = { [":1.0"] = F.fixture("getpid_error.txt"), [":1.3"] = F.fixture("getpid_error.txt") }
+            e.getpid = { [":1.0"] = false, [":1.3"] = false }
         end)
         assert.is_nil(core:bus_name())
     end)

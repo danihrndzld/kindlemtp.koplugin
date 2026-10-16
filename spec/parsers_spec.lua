@@ -11,7 +11,7 @@ describe("parsers", function()
     end)
 
     it("EP-02 a ListNames error or garbage gives no names", function()
-        assert.are.same({}, Mtp.parse_names(F.fixture("getpid_error.txt")))
+        assert.are.same({}, Mtp.parse_names(F.fixture("getpid_error_stderr.txt")))
         assert.are.same({}, Mtp.parse_names(nil))
     end)
 
@@ -19,8 +19,8 @@ describe("parsers", function()
         assert.are.equal(5225, Mtp.parse_pid(F.fixture("getpid_tizen_mtp.txt")))
     end)
 
-    it("EP-04 an error reply gives no pid", function()
-        assert.is_nil(Mtp.parse_pid(F.fixture("getpid_error.txt")))
+    it("EP-04 an error reply (dbus-send's stderr text) or another method's reply gives no pid", function()
+        assert.is_nil(Mtp.parse_pid(F.fixture("getpid_error_stderr.txt")))
         assert.is_nil(Mtp.parse_pid(F.fixture("listnames_with_mtp.txt")))
     end)
 
