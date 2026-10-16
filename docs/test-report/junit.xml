@@ -1,6 +1,6 @@
 
-<testsuites tests='152' failures='0' skip='0' errors='0' time='0.56'>
-	<testsuite tests='152' failures='0' skip='0' timestamp='2026-10-16T09:05:29' errors='0' time='0.55' name='Run 1 of 1'>
+<testsuites errors='0' skip='0' time='0.66' tests='153' failures='0'>
+	<testsuite errors='0' skip='0' timestamp='2026-10-16T12:00:32' name='Run 1 of 1' time='0.64' tests='153' failures='0'>
 		<testcase name='stop triggers DT-R20 NotCharging while active and UDC not configured stops' time='0.00' classname='spec.decisions_spec_lua:5'/>
 		<testcase name='stop triggers DT-R21 NotCharging while active and UDC configured (battery Full) does not stop' time='0.00' classname='spec.decisions_spec_lua:9'/>
 		<testcase name='stop triggers DT-R22 NotCharging while idle does not stop' time='0.00' classname='spec.decisions_spec_lua:13'/>
@@ -16,22 +16,22 @@
 		<testcase name='auto-start DT-R32 reader instance: no start' time='0.00' classname='spec.decisions_spec_lua:55'/>
 		<testcase name='auto-start DT-R33 already active: no start' time='0.00' classname='spec.decisions_spec_lua:59'/>
 		<testcase name='auto-start DT-R34 setting never saved (nil): no start' time='0.00' classname='spec.decisions_spec_lua:63'/>
-		<testcase name='main.lua AC-11 Start flushes settings first, keeps the device awake, shows the dialog and polls every 250 ms' time='0.00' classname='spec.main_spec_lua:19'/>
+		<testcase name='main.lua AC-11 Start flushes settings first, keeps the device awake, shows the dialog and polls every 250 ms' time='0.01' classname='spec.main_spec_lua:19'/>
 		<testcase name='main.lua AC-12 connected, then Stop: dialog closes, settings restored, browser refreshed, polling ends' time='0.00' classname='spec.main_spec_lua:34'/>
-		<testcase name='main.lua DT-R60 NotCharging with the UDC configured (battery Full) keeps the transfer' time='0.00' classname='spec.main_spec_lua:47'/>
-		<testcase name='main.lua DT-R61 NotCharging with the UDC not configured (unplugged) stops and refreshes' time='0.00' classname='spec.main_spec_lua:55'/>
-		<testcase name='main.lua DT-R62 CloseWidget stops without refreshing the closing browser' time='0.00' classname='spec.main_spec_lua:64'/>
-		<testcase name='main.lua DT-R63 Suspend stops' time='0.00' classname='spec.main_spec_lua:72'/>
-		<testcase name='main.lua DT-R64 Charging in the file manager with auto-start on starts after 2 s' time='0.00' classname='spec.main_spec_lua:79'/>
-		<testcase name='main.lua DT-R65 Charging in the reader with auto-start on does nothing' time='0.00' classname='spec.main_spec_lua:87'/>
-		<testcase name='main.lua DT-R66 a book opened during the 2 s auto-start delay cancels the start' time='0.00' classname='spec.main_spec_lua:94'/>
-		<testcase name='main.lua AC-13 with a book open Start is disabled and refused' time='0.00' classname='spec.main_spec_lua:102'/>
-		<testcase name='main.lua AC-14 an auto-started transfer times out without a message' time='0.00' classname='spec.main_spec_lua:112'/>
-		<testcase name='main.lua AC-15 a manual Start that times out says so' time='0.00' classname='spec.main_spec_lua:122'/>
-		<testcase name='main.lua AC-16 Reset shows Resetting and repaints before restart mtp runs' time='0.00' classname='spec.main_spec_lua:129'/>
-		<testcase name='main.lua AC-17 on a non-Kindle the plugin disables itself' time='0.00' classname='spec.main_spec_lua:141'/>
-		<testcase name='main.lua AC-18 loading the plugin never reads lipc' time='0.00' classname='spec.main_spec_lua:146'/>
-		<testcase name='main.lua AC-19 the menu sits under Network with 4 entries' time='0.00' classname='spec.main_spec_lua:151'/>
+		<testcase name='main.lua DT-R60 NotCharging with the UDC configured (battery Full) keeps the transfer' time='0.00' classname='spec.main_spec_lua:51'/>
+		<testcase name='main.lua DT-R61 NotCharging with the UDC not configured (unplugged) stops and refreshes' time='0.00' classname='spec.main_spec_lua:59'/>
+		<testcase name='main.lua DT-R62 CloseWidget stops without refreshing the closing browser' time='0.00' classname='spec.main_spec_lua:69'/>
+		<testcase name='main.lua DT-R63 Suspend stops' time='0.00' classname='spec.main_spec_lua:78'/>
+		<testcase name='main.lua DT-R64 Charging in the file manager with auto-start on starts after 2 s' time='0.00' classname='spec.main_spec_lua:85'/>
+		<testcase name='main.lua DT-R65 Charging in the reader with auto-start on does nothing' time='0.00' classname='spec.main_spec_lua:93'/>
+		<testcase name='main.lua DT-R66 a book opened during the 2 s auto-start delay cancels the start' time='0.00' classname='spec.main_spec_lua:100'/>
+		<testcase name='main.lua AC-13 with a book open Start is disabled and refused' time='0.00' classname='spec.main_spec_lua:108'/>
+		<testcase name='main.lua AC-14 an auto-started transfer times out without a message' time='0.00' classname='spec.main_spec_lua:118'/>
+		<testcase name='main.lua AC-15 a manual Start that times out says so' time='0.00' classname='spec.main_spec_lua:128'/>
+		<testcase name='main.lua AC-16 Reset shows Resetting and repaints before restart mtp runs' time='0.00' classname='spec.main_spec_lua:135'/>
+		<testcase name='main.lua AC-17 on a non-Kindle the plugin disables itself' time='0.00' classname='spec.main_spec_lua:147'/>
+		<testcase name='main.lua AC-18 loading the plugin never reads lipc' time='0.00' classname='spec.main_spec_lua:152'/>
+		<testcase name='main.lua AC-19 the menu sits under Network with 4 entries' time='0.00' classname='spec.main_spec_lua:157'/>
 		<testcase name='parsers EP-01 ListNames reply lists every name, com.lab126.mtp included' time='0.00' classname='spec.parsers_spec_lua:6'/>
 		<testcase name='parsers EP-02 a ListNames error or garbage gives no names' time='0.00' classname='spec.parsers_spec_lua:13'/>
 		<testcase name='parsers EP-03 GetConnectionUnixProcessID reply gives the pid' time='0.00' classname='spec.parsers_spec_lua:18'/>
@@ -40,22 +40,23 @@
 		<testcase name='parsers EP-06 pidof with no output' time='0.00' classname='spec.parsers_spec_lua:31'/>
 		<testcase name='parsers EP-07 pidof with several pids takes the first' time='0.00' classname='spec.parsers_spec_lua:36'/>
 		<testcase name='parsers EP-08 /proc stat of a stopped volumd reads T' time='0.00' classname='spec.parsers_spec_lua:40'/>
-		<testcase name='parsers EP-09 /proc stat of a sleeping volumd reads S' time='0.00' classname='spec.parsers_spec_lua:44'/>
+		<testcase name='parsers EP-09 /proc stat of a running process (tizen-mtp, captured) reads S' time='0.00' classname='spec.parsers_spec_lua:44'/>
 		<testcase name='parsers EP-10 missing /proc stat gives no state' time='0.00' classname='spec.parsers_spec_lua:48'/>
 		<testcase name='parsers EG-01 a comm field holding &apos;) S &apos; does not fool the state parser' time='0.00' classname='spec.parsers_spec_lua:52'/>
 		<testcase name='parsers EP-11 syslog tail with the state-2 line means a host' time='0.00' classname='spec.parsers_spec_lua:56'/>
-		<testcase name='parsers EP-12 syslog tail that stops at state 1 means no host' time='0.00' classname='spec.parsers_spec_lua:60'/>
-		<testcase name='parsers EP-13 empty syslog tail means no host' time='0.00' classname='spec.parsers_spec_lua:64'/>
-		<testcase name='parsers EP-14 marker owned by the plugin' time='0.00' classname='spec.parsers_spec_lua:69'/>
-		<testcase name='parsers EP-15 marker owned by KOBridge' time='0.00' classname='spec.parsers_spec_lua:74'/>
-		<testcase name='parsers EP-16 malformed marker is not a marker' time='0.00' classname='spec.parsers_spec_lua:78'/>
-		<testcase name='parsers EP-17 missing marker' time='0.00' classname='spec.parsers_spec_lua:83'/>
-		<testcase name='parsers EG-03 marker with surrounding whitespace still parses' time='0.00' classname='spec.parsers_spec_lua:87'/>
+		<testcase name='parsers EP-55 the full captured run (debug logs off) and the debug-on log both hold a host' time='0.00' classname='spec.parsers_spec_lua:60'/>
+		<testcase name='parsers EP-12 syslog tail that stops at state 1 means no host' time='0.00' classname='spec.parsers_spec_lua:65'/>
+		<testcase name='parsers EP-13 empty syslog tail means no host' time='0.00' classname='spec.parsers_spec_lua:69'/>
+		<testcase name='parsers EP-14 marker owned by the plugin' time='0.00' classname='spec.parsers_spec_lua:74'/>
+		<testcase name='parsers EP-15 marker owned by KOBridge' time='0.00' classname='spec.parsers_spec_lua:79'/>
+		<testcase name='parsers EP-16 malformed marker is not a marker' time='0.00' classname='spec.parsers_spec_lua:83'/>
+		<testcase name='parsers EP-17 missing marker' time='0.00' classname='spec.parsers_spec_lua:88'/>
+		<testcase name='parsers EG-03 marker with surrounding whitespace still parses' time='0.00' classname='spec.parsers_spec_lua:92'/>
 		<testcase name='posix env EP-40 sh returns the output and ok for exit 0' time='0.01' classname='spec.posix_env_spec_lua:21'/>
-		<testcase name='posix env EP-41 sh reports a non-zero exit as not ok' time='0.00' classname='spec.posix_env_spec_lua:27'/>
-		<testcase name='posix env EP-42 sh keeps output with no trailing newline' time='0.00' classname='spec.posix_env_spec_lua:33'/>
+		<testcase name='posix env EP-41 sh reports a non-zero exit as not ok' time='0.01' classname='spec.posix_env_spec_lua:27'/>
+		<testcase name='posix env EP-42 sh keeps output with no trailing newline' time='0.01' classname='spec.posix_env_spec_lua:33'/>
 		<testcase name='posix env EP-43 read of a missing file is nil' time='0.00' classname='spec.posix_env_spec_lua:37'/>
-		<testcase name='posix env EP-44 write then read round-trips, remove deletes' time='0.01' classname='spec.posix_env_spec_lua:41'/>
+		<testcase name='posix env EP-44 write then read round-trips, remove deletes' time='0.02' classname='spec.posix_env_spec_lua:41'/>
 		<testcase name='posix env EP-45 exclusive write fails when the file exists and keeps it' time='0.01' classname='spec.posix_env_spec_lua:51'/>
 		<testcase name='posix env EP-46 exclusive write creates a missing file' time='0.01' classname='spec.posix_env_spec_lua:61'/>
 		<testcase name='posix env EG-02 exclusive write survives quotes and spaces in text and path' time='0.01' classname='spec.posix_env_spec_lua:70'/>
@@ -120,38 +121,38 @@
 		<testcase name='poll ST-T2 waiting_host -&gt; connected when the state-2 line shows up' time='0.00' classname='spec.state_spec_lua:266'/>
 		<testcase name='poll AC-03 the drive-mode signal goes out exactly once, unicast to com.lab126.mtp' time='0.00' classname='spec.state_spec_lua:274'/>
 		<testcase name='poll AC-04 with no well-known name the signal is unicast to tizen-mtp&apos;s :1.N' time='0.00' classname='spec.state_spec_lua:283'/>
-		<testcase name='poll AC-06 host tape with syslog: connected at t=0.5' time='0.00' classname='spec.state_spec_lua:294'/>
-		<testcase name='poll AC-07 UDC hint alone (bound, then empty) also means a host' time='0.00' classname='spec.state_spec_lua:307'/>
-		<testcase name='poll EG-04 a state-2 line from an earlier session never counts' time='0.00' classname='spec.state_spec_lua:316'/>
-		<testcase name='poll AC-05 charger-only tape: no host, timeout at 20 s, teardown, no signal' time='0.00' classname='spec.state_spec_lua:324'/>
-		<testcase name='poll ST-T7 waiting_host -&gt; failed when dbus-send fails' time='0.00' classname='spec.state_spec_lua:336'/>
-		<testcase name='poll ST-T6 connected -&gt; idle when isMtpStarted drops to 0' time='0.00' classname='spec.state_spec_lua:345'/>
-		<testcase name='poll DT-R40 marker gone (KOBridge stopped): release without teardown' time='0.00' classname='spec.state_spec_lua:355'/>
-		<testcase name='poll DT-R41 marker taken over by KOBridge: release, its marker stays' time='0.00' classname='spec.state_spec_lua:364'/>
-		<testcase name='poll DT-R42 isMtpStarted 0 while waiting for the host: dropped with teardown' time='0.00' classname='spec.state_spec_lua:371'/>
-		<testcase name='poll DT-R43 a failed lipc read (nil) is not a dropout' time='0.00' classname='spec.state_spec_lua:378'/>
-		<testcase name='poll ST-I3 poll in idle does nothing' time='0.00' classname='spec.state_spec_lua:386'/>
-		<testcase name='poll ST-I4 poll in failed does nothing' time='0.00' classname='spec.state_spec_lua:392'/>
-		<testcase name='poll ST-I5 the state-2 line seen again in connected sends nothing' time='0.00' classname='spec.state_spec_lua:400'/>
-		<testcase name='poll AC-10 log lines carry the kindlemtp: prefix' time='0.00' classname='spec.state_spec_lua:408'/>
-		<testcase name='timeout boundaries BVA-08 isMtpStarted is read at most once per second: not at +0.75 s, again at +1.00 s' time='0.00' classname='spec.state_spec_lua:417'/>
-		<testcase name='timeout boundaries BVA-01 at 19.75 s the plugin still waits' time='0.00' classname='spec.state_spec_lua:429'/>
-		<testcase name='timeout boundaries BVA-02 at 20.00 s it times out' time='0.00' classname='spec.state_spec_lua:436'/>
-		<testcase name='timeout boundaries BVA-03 at 20.25 s it times out' time='0.00' classname='spec.state_spec_lua:442'/>
-		<testcase name='timeout boundaries BVA-04 with 250 ms ticks, tick 79 waits and tick 80 times out' time='0.02' classname='spec.state_spec_lua:448'/>
-		<testcase name='timeout boundaries BVA-05 a host seen on the 20.00 s tick wins over the timeout' time='0.00' classname='spec.state_spec_lua:458'/>
-		<testcase name='timeout boundaries BVA-06 syslog shorter than at start (rotated): read from line 1 and still detect' time='0.00' classname='spec.state_spec_lua:465'/>
-		<testcase name='timeout boundaries EG-05 wc fails at start: watch syslog from the first tick on' time='0.00' classname='spec.state_spec_lua:476'/>
-		<testcase name='stop and reset ST-T4 waiting_host -&gt; idle on stop' time='0.00' classname='spec.state_spec_lua:488'/>
-		<testcase name='stop and reset ST-T5 connected -&gt; stopping -&gt; idle' time='0.00' classname='spec.state_spec_lua:494'/>
-		<testcase name='stop and reset AC-02 stop sends stopMtp, udc disable, keep-awake restore, marker removal in order' time='0.00' classname='spec.state_spec_lua:501'/>
-		<testcase name='stop and reset ST-T11 failed -&gt; idle on stop' time='0.00' classname='spec.state_spec_lua:508'/>
-		<testcase name='stop and reset ST-T13 stop in idle tears down and is idempotent' time='0.00' classname='spec.state_spec_lua:517'/>
-		<testcase name='stop and reset ST-T17 double stop from waiting_host ends idle with the saved keep-awake' time='0.00' classname='spec.state_spec_lua:528'/>
-		<testcase name='stop and reset ST-T18 double stop from connected ends idle, responder stopped, marker gone' time='0.00' classname='spec.state_spec_lua:537'/>
-		<testcase name='stop and reset ST-T19 double stop from failed ends idle' time='0.00' classname='spec.state_spec_lua:546'/>
-		<testcase name='stop and reset ST-T20 stop tears down a KOBridge session too' time='0.00' classname='spec.state_spec_lua:554'/>
-		<testcase name='stop and reset ST-T14 reset from connected: restart mtp, then the stop sequence' time='0.00' classname='spec.state_spec_lua:564'/>
-		<testcase name='stop and reset ST-T15 reset whose restart fails still stops and reports it' time='0.00' classname='spec.state_spec_lua:574'/>
+		<testcase name='poll AC-06 captured host tape with syslog: connected when the gadget unbinds (t=3.00)' time='0.00' classname='spec.state_spec_lua:309'/>
+		<testcase name='poll AC-07 UDC hint alone on the captured tape (bound, then empty) also means a host' time='0.00' classname='spec.state_spec_lua:315'/>
+		<testcase name='poll EG-04 a state-2 line from an earlier session never counts' time='0.00' classname='spec.state_spec_lua:320'/>
+		<testcase name='poll AC-05 charger-only tape: no host, timeout at 20 s, teardown, no signal' time='0.00' classname='spec.state_spec_lua:328'/>
+		<testcase name='poll ST-T7 waiting_host -&gt; failed when dbus-send fails' time='0.00' classname='spec.state_spec_lua:340'/>
+		<testcase name='poll ST-T6 connected -&gt; idle when isMtpStarted drops to 0' time='0.00' classname='spec.state_spec_lua:349'/>
+		<testcase name='poll DT-R40 marker gone (KOBridge stopped): release without teardown' time='0.00' classname='spec.state_spec_lua:359'/>
+		<testcase name='poll DT-R41 marker taken over by KOBridge: release, its marker stays' time='0.00' classname='spec.state_spec_lua:368'/>
+		<testcase name='poll DT-R42 isMtpStarted 0 while waiting for the host: dropped with teardown' time='0.00' classname='spec.state_spec_lua:375'/>
+		<testcase name='poll DT-R43 a failed lipc read (nil) is not a dropout' time='0.00' classname='spec.state_spec_lua:382'/>
+		<testcase name='poll ST-I3 poll in idle does nothing' time='0.00' classname='spec.state_spec_lua:390'/>
+		<testcase name='poll ST-I4 poll in failed does nothing' time='0.00' classname='spec.state_spec_lua:396'/>
+		<testcase name='poll ST-I5 the state-2 line seen again in connected sends nothing' time='0.00' classname='spec.state_spec_lua:404'/>
+		<testcase name='poll AC-10 log lines carry the kindlemtp: prefix' time='0.00' classname='spec.state_spec_lua:412'/>
+		<testcase name='timeout boundaries BVA-08 isMtpStarted is read at most once per second: not at +0.75 s, again at +1.00 s' time='0.00' classname='spec.state_spec_lua:421'/>
+		<testcase name='timeout boundaries BVA-01 at 19.75 s the plugin still waits' time='0.00' classname='spec.state_spec_lua:433'/>
+		<testcase name='timeout boundaries BVA-02 at 20.00 s it times out' time='0.00' classname='spec.state_spec_lua:440'/>
+		<testcase name='timeout boundaries BVA-03 at 20.25 s it times out' time='0.00' classname='spec.state_spec_lua:446'/>
+		<testcase name='timeout boundaries BVA-04 with 250 ms ticks, tick 79 waits and tick 80 times out' time='0.02' classname='spec.state_spec_lua:452'/>
+		<testcase name='timeout boundaries BVA-05 a host seen on the 20.00 s tick wins over the timeout' time='0.00' classname='spec.state_spec_lua:462'/>
+		<testcase name='timeout boundaries BVA-06 syslog shorter than at start (rotated): read from line 1 and still detect' time='0.00' classname='spec.state_spec_lua:469'/>
+		<testcase name='timeout boundaries EG-05 wc fails at start: watch syslog from the first tick on' time='0.00' classname='spec.state_spec_lua:480'/>
+		<testcase name='stop and reset ST-T4 waiting_host -&gt; idle on stop' time='0.00' classname='spec.state_spec_lua:492'/>
+		<testcase name='stop and reset ST-T5 connected -&gt; stopping -&gt; idle' time='0.00' classname='spec.state_spec_lua:498'/>
+		<testcase name='stop and reset AC-02 stop sends stopMtp, udc disable, keep-awake restore, marker removal in order' time='0.00' classname='spec.state_spec_lua:505'/>
+		<testcase name='stop and reset ST-T11 failed -&gt; idle on stop' time='0.00' classname='spec.state_spec_lua:512'/>
+		<testcase name='stop and reset ST-T13 stop in idle tears down and is idempotent' time='0.00' classname='spec.state_spec_lua:521'/>
+		<testcase name='stop and reset ST-T17 double stop from waiting_host ends idle with the saved keep-awake' time='0.00' classname='spec.state_spec_lua:532'/>
+		<testcase name='stop and reset ST-T18 double stop from connected ends idle, responder stopped, marker gone' time='0.00' classname='spec.state_spec_lua:541'/>
+		<testcase name='stop and reset ST-T19 double stop from failed ends idle' time='0.00' classname='spec.state_spec_lua:550'/>
+		<testcase name='stop and reset ST-T20 stop tears down a KOBridge session too' time='0.00' classname='spec.state_spec_lua:558'/>
+		<testcase name='stop and reset ST-T14 reset from connected: restart mtp, then the stop sequence' time='0.00' classname='spec.state_spec_lua:568'/>
+		<testcase name='stop and reset ST-T15 reset whose restart fails still stops and reports it' time='0.00' classname='spec.state_spec_lua:578'/>
 	</testsuite>
 </testsuites>

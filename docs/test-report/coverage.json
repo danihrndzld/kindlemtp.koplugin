@@ -11,8 +11,8 @@
  },
  "kindlemtp.koplugin/main.lua": {
   "statements": {
-   "covered": 158,
-   "total": 180
+   "covered": 161,
+   "total": 183
   },
   "branches": {
    "covered": 0,
@@ -21,8 +21,8 @@
  },
  "total": {
   "statements": {
-   "covered": 426,
-   "total": 451
+   "covered": 429,
+   "total": 454
   },
   "branches": {
    "covered": 0,

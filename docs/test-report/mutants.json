@@ -392,7 +392,7 @@
  {
   "id": "M30",
   "desc": "CloseWidget refreshes a closing browser",
-  "line": "kindlemtp.koplugin/main.lua:179",
+  "line": "kindlemtp.koplugin/main.lua:186",
   "killed": true,
   "tests": [
    "DT-R62"
@@ -401,7 +401,7 @@
  {
   "id": "M31",
   "desc": "No repaint before Reset",
-  "line": "kindlemtp.koplugin/main.lua:242",
+  "line": "kindlemtp.koplugin/main.lua:249",
   "killed": true,
   "tests": [
    "AC-16"
@@ -410,7 +410,7 @@
  {
   "id": "M32",
   "desc": "NotCharging ignores the UDC state",
-  "line": "kindlemtp.koplugin/main.lua:175",
+  "line": "kindlemtp.koplugin/main.lua:182",
   "killed": true,
   "tests": [
    "DT-R60"
@@ -419,7 +419,7 @@
  {
   "id": "M33",
   "desc": "Settings not flushed before Start",
-  "line": "kindlemtp.koplugin/main.lua:149",
+  "line": "kindlemtp.koplugin/main.lua:156",
   "killed": true,
   "tests": [
    "AC-11"
@@ -428,7 +428,7 @@
  {
   "id": "M34",
   "desc": "Load-time probe reads lipc",
-  "line": "kindlemtp.koplugin/main.lua:74",
+  "line": "kindlemtp.koplugin/main.lua:78",
   "killed": true,
   "tests": [
    "AC-18"
@@ -437,7 +437,16 @@
  {
   "id": "M35",
   "desc": "PluginShare never restored",
-  "line": "kindlemtp.koplugin/main.lua:97",
+  "line": "kindlemtp.koplugin/main.lua:101",
+  "killed": true,
+  "tests": [
+   "AC-12"
+  ]
+ },
+ {
+  "id": "M43",
+  "desc": "File browser refreshed at once, before fsp catches up",
+  "line": "kindlemtp.koplugin/main.lua:123",
   "killed": true,
   "tests": [
    "AC-12"
@@ -446,7 +455,7 @@
  {
   "id": "M36",
   "desc": "Auto-start ignores that the file manager closed during the delay",
-  "line": "kindlemtp.koplugin/main.lua:276",
+  "line": "kindlemtp.koplugin/main.lua:283",
   "killed": true,
   "tests": [
    "DT-R66"

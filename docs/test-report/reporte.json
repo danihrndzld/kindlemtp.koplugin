@@ -6,11 +6,11 @@
   "tipo_doc": "Reporte de Pruebas",
   "objeto": "kindlemtp_core.lua y main.lua",
   "objeto_detalle": "kindlemtp.koplugin/kindlemtp_core.lua — núcleo MTP sin KOReader",
-  "version": "12cb2da",
+  "version": "673eee1",
   "titulo_corto": "kindlemtp kindlemtp_core.lua — 2026",
   "subtitulo": [
-   "152 pruebas busted; 42 de 42 mutantes muertos",
-   "Fixtures de syslog capturados; D-Bus, UDC y /proc sintéticos"
+   "153 pruebas busted; 43 de 43 mutantes muertos",
+   "Fixtures capturados en el Kindle el 2026-10-16"
   ],
   "fecha": "15 de octubre de 2026"
  },
@@ -96,8 +96,8 @@
    ]
   }
  ],
- "resumen": "<p>Se diseñaron 152 casos con 6 técnicas sobre <code>kindlemtp_core.lua</code> y <code>main.lua</code> y se ejecutaron con busted 2.3.0 en LuaJIT 2.1. La cobertura de sentencias de <code>kindlemtp_core.lua</code> sale de luacov (las ramas no se miden: luacov no las reporta). Un mutation check aplicó 42 mutantes a los comportamientos clave y la suite mató 42. El primer pase dejó vivo M25 (sobrante de crash con el responder activo); se agregó DT-R56 y ahora muere. Tras la revisión de Fable se agregaron las pruebas de main.lua con stubs y 11 mutantes más; la revisión de KOBridge agregó DT-R59 y M37 (perder la carrera del marcador no debe cortar la sesión de KOBridge); el 2026-10-16 el marcador pasó a reclamarse antes del reset (M38 reset antes del reclamo, M39 un reclamo fallido que hace teardown), y la regla de marcador rancio pasó a exigir isMtpStarted 0 y since de al menos 30 s (BVA-09 a BVA-12, EP-53, EP-54, M40 a M42). Una mutación que trataba un since futuro como rancio resultó equivalente (la resta ya da negativo) y se descartó. No se encontraron defectos en el código; los fixtures de D-Bus, UDC y /proc son sintéticos porque <code>device-checks.txt</code> llegó vacío.</p>",
- "objeto": "<p><code>kindlemtp_core.lua</code> arranca y detiene el responder MTP del Kindle (tizen-mtp) mientras KOReader corre: valida el equipo (7 checks), busca el destino D-Bus, ejecuta la receta de <code>docs/design.md</code> (reset, startMtp, señal driveModeStateChanged unicast, stopMtp + <code>mtp.sh udc disable</code>), guarda el marcador <code>/tmp/kindlemtp.active</code> compartido con KOBridge y restaura preventScreenSaver. Todo efecto pasa por un <code>env</code> inyectado; las pruebas usan <code>spec/fake_env.lua</code>, que registra cada comando en orden.</p><p>Los esperados salen de la spec. Ejemplos literales: 'The drive-mode signal must be <b>unicast</b>'; 'After 20 s without a host it stops quietly and returns <code>timeout</code>'; 'stop(): idempotent from every state, whoever owns the marker: <code>stopMtp 1</code>, then <code>mtp.sh udc disable</code>'. Donde la spec calla se declararon los supuestos S1-S8.</p><p>Fixtures: <code>syslog_state2.txt</code> es el log capturado en el equipo el 2026-10-15 (<code>mtp-startmtp-log.txt</code>) y <code>syslog_no_state2.txt</code> son sus primeras 21 líneas. ListNames, GetConnectionUnixProcessID, <code>/proc/2187/stat</code> y las cintas UDC son sintéticos con el formato de <code>dbus-send --print-reply</code> y del kernel, y usan el pid 5225 del log real.</p>",
+ "resumen": "<p>Se diseñaron 153 casos con 6 técnicas sobre <code>kindlemtp_core.lua</code> y <code>main.lua</code> y se ejecutaron con busted 2.3.0 en LuaJIT 2.1. La cobertura de sentencias de <code>kindlemtp_core.lua</code> sale de luacov (las ramas no se miden: luacov no las reporta). Un mutation check aplicó 43 mutantes a los comportamientos clave y la suite mató 43. El primer pase dejó vivo M25 (sobrante de crash con el responder activo); se agregó DT-R56 y ahora muere. Tras la revisión de Fable se agregaron las pruebas de main.lua con stubs y 11 mutantes más; la revisión de KOBridge agregó DT-R59 y M37 (perder la carrera del marcador no debe cortar la sesión de KOBridge); el 2026-10-16 el marcador pasó a reclamarse antes del reset (M38 reset antes del reclamo, M39 un reclamo fallido que hace teardown), y la regla de marcador rancio pasó a exigir isMtpStarted 0 y since de al menos 30 s (BVA-09 a BVA-12, EP-53, EP-54, M40 a M42); M43 cubre el refresco del navegador 1 s después del stop (lag de fsp). Una mutación que trataba un since futuro como rancio resultó equivalente (la resta ya da negativo) y se descartó. No se encontraron defectos en el código. Los fixtures son capturas del equipo salvo 3 archivos sintéticos.</p>",
+ "objeto": "<p><code>kindlemtp_core.lua</code> arranca y detiene el responder MTP del Kindle (tizen-mtp) mientras KOReader corre: valida el equipo (7 checks), busca el destino D-Bus, ejecuta la receta de <code>docs/design.md</code> (reset, startMtp, señal driveModeStateChanged unicast, stopMtp + <code>mtp.sh udc disable</code>), guarda el marcador <code>/tmp/kindlemtp.active</code> compartido con KOBridge y restaura preventScreenSaver. Todo efecto pasa por un <code>env</code> inyectado; las pruebas usan <code>spec/fake_env.lua</code>, que registra cada comando en orden.</p><p>Los esperados salen de la spec. Ejemplos literales: 'The drive-mode signal must be <b>unicast</b>'; 'After 20 s without a host it stops quietly and returns <code>timeout</code>'; 'stop(): idempotent from every state, whoever owns the marker: <code>stopMtp 1</code>, then <code>mtp.sh udc disable</code>'. Donde la spec calla se declararon los supuestos S1-S8.</p><p>Fixtures: ListNames, GetConnectionUnixProcessID, el error de <code>dbus-send</code> (en stderr, stdout vacío), <code>/proc/&lt;pid&gt;/stat</code> de volumd (T) y tizen-mtp (S), 60 líneas de syslog de una corrida 4→1→2→3→4 sin debug y la cinta UDC con host se capturaron en el Paperwhite el 2026-10-16. Quedan sintéticos <code>listnames_without_mtp.txt</code> (la captura sin la línea de com.lab126.mtp), <code>getpid_other.txt</code> y la cinta de cargador; <code>spec/fixtures/README.md</code> da el origen de cada archivo.</p>",
  "riesgos": [
   {
    "id": "C1",
@@ -204,8 +204,8 @@
    "casos": [
     {
      "id": "EP-01",
-     "entrada": "ListNames con com.lab126.mtp (fixture)",
-     "esperado": "18 nombres, com.lab126.mtp en la posición 9",
+     "entrada": "ListNames capturado en el equipo",
+     "esperado": "92 nombres, com.lab126.mtp en la posición 10",
      "ubicacion": "spec/parsers_spec.lua:6"
     },
     {
@@ -246,13 +246,13 @@
     },
     {
      "id": "EP-08",
-     "entrada": "/proc/2187/stat con estado T",
+     "entrada": "/proc/5237/stat de volumd (capturado)",
      "esperado": "T",
      "ubicacion": "spec/parsers_spec.lua:40"
     },
     {
      "id": "EP-09",
-     "entrada": "/proc/2187/stat con estado S",
+     "entrada": "/proc/5225/stat de tizen-mtp (capturado)",
      "esperado": "S",
      "ubicacion": "spec/parsers_spec.lua:44"
     },
@@ -272,37 +272,37 @@
      "id": "EP-12",
      "entrada": "Syslog capturado hasta estado 1",
      "esperado": "sin host",
-     "ubicacion": "spec/parsers_spec.lua:60"
+     "ubicacion": "spec/parsers_spec.lua:65"
     },
     {
      "id": "EP-13",
      "entrada": "Syslog vacío / nil",
      "esperado": "sin host",
-     "ubicacion": "spec/parsers_spec.lua:64"
+     "ubicacion": "spec/parsers_spec.lua:69"
     },
     {
      "id": "EP-14",
      "entrada": "Marcador owner=plugin",
      "esperado": "tabla owner, pid, since",
-     "ubicacion": "spec/parsers_spec.lua:69"
+     "ubicacion": "spec/parsers_spec.lua:74"
     },
     {
      "id": "EP-15",
      "entrada": "Marcador owner=kobridge",
      "esperado": "owner kobridge",
-     "ubicacion": "spec/parsers_spec.lua:74"
+     "ubicacion": "spec/parsers_spec.lua:79"
     },
     {
      "id": "EP-16",
      "entrada": "Marcador truncado o pid no numérico",
      "esperado": "nil",
-     "ubicacion": "spec/parsers_spec.lua:78"
+     "ubicacion": "spec/parsers_spec.lua:83"
     },
     {
      "id": "EP-17",
      "entrada": "Marcador ausente",
      "esperado": "nil",
-     "ubicacion": "spec/parsers_spec.lua:83"
+     "ubicacion": "spec/parsers_spec.lua:88"
     },
     {
      "id": "EP-20",
@@ -313,13 +313,13 @@
     {
      "id": "EP-21",
      "entrada": "ListNames sin nombre conocido",
-     "esperado": ":1.3 tras 4 consultas",
+     "esperado": ":1.3 tras 40 consultas",
      "ubicacion": "spec/probe_spec.lua:114"
     },
     {
      "id": "EP-22",
      "entrada": "Ningún :1.N con pid 5225",
-     "esperado": "nil tras 9 consultas",
+     "esperado": "nil tras 47 consultas",
      "ubicacion": "spec/probe_spec.lua:120"
     },
     {
@@ -453,10 +453,16 @@
      "entrada": "Marcador plugin fresco (2 s), isMtpStarted 0",
      "esperado": "already_active",
      "ubicacion": "spec/state_spec.lua:146"
+    },
+    {
+     "id": "EP-55",
+     "entrada": "Corrida completa capturada sin debug y log con debug",
+     "esperado": "host visto en ambos",
+     "ubicacion": "spec/parsers_spec.lua:60"
     }
    ],
-   "cobertura": "<p>42 particiones de 42 identificadas = 100%.</p>",
-   "limites": "<p>Los fixtures de D-Bus son sintéticos: si el <code>dbus-send</code> del Kindle formatea distinto (por ejemplo sin sangría), EP no lo detecta hasta capturar la salida real.</p>"
+   "cobertura": "<p>43 particiones de 43 identificadas = 100%.</p>",
+   "limites": "<p>Las salidas de <code>dbus-send</code> son de una sola versión de firmware (5.18.5); otro firmware con otro formato no se detecta hasta capturarlo.</p>"
   },
   {
    "nombre": "Boundary Value Analysis (3 valores)",
@@ -471,43 +477,43 @@
      "id": "BVA-01",
      "entrada": "t = 19.75 s",
      "esperado": "sigue waiting_host",
-     "ubicacion": "spec/state_spec.lua:429"
+     "ubicacion": "spec/state_spec.lua:433"
     },
     {
      "id": "BVA-02",
      "entrada": "t = 20.00 s",
      "esperado": "timeout",
-     "ubicacion": "spec/state_spec.lua:436"
+     "ubicacion": "spec/state_spec.lua:440"
     },
     {
      "id": "BVA-03",
      "entrada": "t = 20.25 s",
      "esperado": "timeout",
-     "ubicacion": "spec/state_spec.lua:442"
+     "ubicacion": "spec/state_spec.lua:446"
     },
     {
      "id": "BVA-04",
      "entrada": "79 y 80 ticks de 250 ms",
      "esperado": "tick 79 espera, tick 80 timeout",
-     "ubicacion": "spec/state_spec.lua:448"
+     "ubicacion": "spec/state_spec.lua:452"
     },
     {
      "id": "BVA-05",
      "entrada": "Línea de estado 2 en el tick de 20.00 s",
      "esperado": "connected (S1)",
-     "ubicacion": "spec/state_spec.lua:458"
+     "ubicacion": "spec/state_spec.lua:462"
     },
     {
      "id": "BVA-06",
      "entrada": "Syslog con 0 líneas (antes 2)",
      "esperado": "baseline 0 y detecta el host (S3)",
-     "ubicacion": "spec/state_spec.lua:465"
+     "ubicacion": "spec/state_spec.lua:469"
     },
     {
      "id": "BVA-08",
      "entrada": "isMtpStarted a 0 en connected; polls en +0.75 s y +1.00 s desde la última lectura",
      "esperado": "sin lectura lipc en +0.75 s; dropped en +1.00 s",
-     "ubicacion": "spec/state_spec.lua:417"
+     "ubicacion": "spec/state_spec.lua:421"
     },
     {
      "id": "BVA-09",
@@ -733,25 +739,25 @@
      "id": "DT-R40",
      "entrada": "connected; marcador borrado",
      "esperado": "released; solo restaura preventScreenSaver",
-     "ubicacion": "spec/state_spec.lua:355"
+     "ubicacion": "spec/state_spec.lua:359"
     },
     {
      "id": "DT-R41",
      "entrada": "waiting_host; marcador de kobridge",
      "esperado": "released; marcador ajeno intacto",
-     "ubicacion": "spec/state_spec.lua:364"
+     "ubicacion": "spec/state_spec.lua:368"
     },
     {
      "id": "DT-R42",
      "entrada": "waiting_host; isMtpStarted 0",
      "esperado": "dropped con teardown",
-     "ubicacion": "spec/state_spec.lua:371"
+     "ubicacion": "spec/state_spec.lua:375"
     },
     {
      "id": "DT-R43",
      "entrada": "connected; get_int nil",
      "esperado": "sin cambio (S4)",
-     "ubicacion": "spec/state_spec.lua:378"
+     "ubicacion": "spec/state_spec.lua:382"
     },
     {
      "id": "DT-R50",
@@ -817,43 +823,43 @@
      "id": "DT-R60",
      "entrada": "main: NotCharging con UDC configured",
      "esperado": "sigue connected",
-     "ubicacion": "spec/main_spec.lua:47"
+     "ubicacion": "spec/main_spec.lua:51"
     },
     {
      "id": "DT-R61",
      "entrada": "main: NotCharging con UDC not attached",
-     "esperado": "idle y refreshPath",
-     "ubicacion": "spec/main_spec.lua:55"
+     "esperado": "idle y refreshPath tras 1 s",
+     "ubicacion": "spec/main_spec.lua:59"
     },
     {
      "id": "DT-R62",
      "entrada": "main: CloseWidget",
-     "esperado": "idle sin refreshPath",
-     "ubicacion": "spec/main_spec.lua:64"
+     "esperado": "idle, nada programado, sin refreshPath",
+     "ubicacion": "spec/main_spec.lua:69"
     },
     {
      "id": "DT-R63",
      "entrada": "main: Suspend",
      "esperado": "idle",
-     "ubicacion": "spec/main_spec.lua:72"
+     "ubicacion": "spec/main_spec.lua:78"
     },
     {
      "id": "DT-R64",
      "entrada": "main: Charging en file manager, auto-start on",
      "esperado": "start a los 2 s",
-     "ubicacion": "spec/main_spec.lua:79"
+     "ubicacion": "spec/main_spec.lua:85"
     },
     {
      "id": "DT-R65",
      "entrada": "main: Charging en el lector",
      "esperado": "nada programado",
-     "ubicacion": "spec/main_spec.lua:87"
+     "ubicacion": "spec/main_spec.lua:93"
     },
     {
      "id": "DT-R66",
      "entrada": "main: libro abierto durante los 2 s",
      "esperado": "no arranca",
-     "ubicacion": "spec/main_spec.lua:94"
+     "ubicacion": "spec/main_spec.lua:100"
     }
    ],
    "cobertura": "<p>51 reglas factibles de 51 = 100%.</p>",
@@ -884,19 +890,19 @@
      "id": "ST-I3",
      "entrada": "poll en idle",
      "esperado": "nil, 0 llamadas",
-     "ubicacion": "spec/state_spec.lua:386"
+     "ubicacion": "spec/state_spec.lua:390"
     },
     {
      "id": "ST-I4",
      "entrada": "poll en failed",
      "esperado": "nil, 0 llamadas",
-     "ubicacion": "spec/state_spec.lua:392"
+     "ubicacion": "spec/state_spec.lua:396"
     },
     {
      "id": "ST-I5",
      "entrada": "poll en connected con estado 2 visible otra vez",
      "esperado": "nil, 0 acciones",
-     "ubicacion": "spec/state_spec.lua:400"
+     "ubicacion": "spec/state_spec.lua:404"
     },
     {
      "id": "ST-T1",
@@ -914,25 +920,25 @@
      "id": "ST-T4",
      "entrada": "waiting_host + stop",
      "esperado": "idle",
-     "ubicacion": "spec/state_spec.lua:488"
+     "ubicacion": "spec/state_spec.lua:492"
     },
     {
      "id": "ST-T5",
      "entrada": "connected + stop",
      "esperado": "idle; udc disable en stopping",
-     "ubicacion": "spec/state_spec.lua:494"
+     "ubicacion": "spec/state_spec.lua:498"
     },
     {
      "id": "ST-T6",
      "entrada": "connected + isMtpStarted 0",
      "esperado": "idle con la secuencia de stop",
-     "ubicacion": "spec/state_spec.lua:345"
+     "ubicacion": "spec/state_spec.lua:349"
     },
     {
      "id": "ST-T7",
      "entrada": "waiting_host + dbus-send falla",
      "esperado": "failed, marcador borrado",
-     "ubicacion": "spec/state_spec.lua:336"
+     "ubicacion": "spec/state_spec.lua:340"
     },
     {
      "id": "ST-T8",
@@ -956,7 +962,7 @@
      "id": "ST-T11",
      "entrada": "failed + stop",
      "esperado": "idle",
-     "ubicacion": "spec/state_spec.lua:508"
+     "ubicacion": "spec/state_spec.lua:512"
     },
     {
      "id": "ST-T12",
@@ -968,43 +974,43 @@
      "id": "ST-T13",
      "entrada": "idle + stop dos veces",
      "esperado": "mismas 3 acciones cada vez",
-     "ubicacion": "spec/state_spec.lua:517"
+     "ubicacion": "spec/state_spec.lua:521"
     },
     {
      "id": "ST-T14",
      "entrada": "connected + reset",
      "esperado": "restart mtp y luego la secuencia de stop",
-     "ubicacion": "spec/state_spec.lua:564"
+     "ubicacion": "spec/state_spec.lua:568"
     },
     {
      "id": "ST-T15",
      "entrada": "reset con restart fallido",
      "esperado": "restart_failed, idle, isMtpStarted 0",
-     "ubicacion": "spec/state_spec.lua:574"
+     "ubicacion": "spec/state_spec.lua:578"
     },
     {
      "id": "ST-T17",
      "entrada": "waiting_host + 2 stops",
      "esperado": "idle, pss del usuario 1",
-     "ubicacion": "spec/state_spec.lua:528"
+     "ubicacion": "spec/state_spec.lua:532"
     },
     {
      "id": "ST-T18",
      "entrada": "connected + 2 stops",
      "esperado": "idle, responder parado, sin marcador",
-     "ubicacion": "spec/state_spec.lua:537"
+     "ubicacion": "spec/state_spec.lua:541"
     },
     {
      "id": "ST-T19",
      "entrada": "failed + 2 stops",
      "esperado": "idle",
-     "ubicacion": "spec/state_spec.lua:546"
+     "ubicacion": "spec/state_spec.lua:550"
     },
     {
      "id": "ST-T20",
      "entrada": "idle + stop con sesión kobridge",
      "esperado": "teardown y marcador borrado",
-     "ubicacion": "spec/state_spec.lua:554"
+     "ubicacion": "spec/state_spec.lua:558"
     }
    ],
    "cobertura": "<p>23 casos: 16 transiciones válidas (más 4 cubiertas por AC-05, BVA-02, DT-R40 y DT-R42) y 5 inválidas = 100% de las celdas del modelo.</p>",
@@ -1029,7 +1035,7 @@
      "id": "AC-02",
      "entrada": "stop desde connected",
      "esperado": "stopMtp, udc disable, pss restaurado, marcador borrado",
-     "ubicacion": "spec/state_spec.lua:501"
+     "ubicacion": "spec/state_spec.lua:505"
     },
     {
      "id": "AC-03",
@@ -1047,19 +1053,19 @@
      "id": "AC-05",
      "entrada": "Cinta cargador hasta 20 s",
      "esperado": "timeout, idle, 0 señales, isMtpStarted 0",
-     "ubicacion": "spec/state_spec.lua:324"
+     "ubicacion": "spec/state_spec.lua:328"
     },
     {
      "id": "AC-06",
-     "entrada": "Cinta host + syslog",
-     "esperado": "connected en t=0.5, 1 señal",
-     "ubicacion": "spec/state_spec.lua:294"
+     "entrada": "Cinta host capturada + syslog",
+     "esperado": "connected en t=3.00, 1 señal",
+     "ubicacion": "spec/state_spec.lua:309"
     },
     {
      "id": "AC-07",
-     "entrada": "Cinta host sin syslog",
-     "esperado": "connected tras UDC ocupado→vacío",
-     "ubicacion": "spec/state_spec.lua:307"
+     "entrada": "Cinta host capturada sin syslog",
+     "esperado": "connected en t=3.00 tras UDC ocupado→vacío",
+     "ubicacion": "spec/state_spec.lua:315"
     },
     {
      "id": "AC-08",
@@ -1077,7 +1083,7 @@
      "id": "AC-10",
      "entrada": "Sesión completa",
      "esperado": "todo log empieza con kindlemtp:",
-     "ubicacion": "spec/state_spec.lua:408"
+     "ubicacion": "spec/state_spec.lua:412"
     },
     {
      "id": "AC-11",
@@ -1088,50 +1094,50 @@
     {
      "id": "AC-12",
      "entrada": "main: connected y Stop",
-     "esperado": "título Connected; cierra diálogo, refreshPath, PluginShare restaurado",
+     "esperado": "título Connected; cierra diálogo, PluginShare restaurado, refreshPath a 1 s (lag de fsp)",
      "ubicacion": "spec/main_spec.lua:34"
     },
     {
      "id": "AC-13",
      "entrada": "main: libro abierto",
      "esperado": "entrada deshabilitada, mensaje, 0 startMtp",
-     "ubicacion": "spec/main_spec.lua:102"
+     "ubicacion": "spec/main_spec.lua:108"
     },
     {
      "id": "AC-14",
      "entrada": "main: auto-start con timeout",
      "esperado": "idle sin InfoMessage",
-     "ubicacion": "spec/main_spec.lua:112"
+     "ubicacion": "spec/main_spec.lua:118"
     },
     {
      "id": "AC-15",
      "entrada": "main: Start manual con timeout",
      "esperado": "InfoMessage de 20 s",
-     "ubicacion": "spec/main_spec.lua:122"
+     "ubicacion": "spec/main_spec.lua:128"
     },
     {
      "id": "AC-16",
      "entrada": "main: Reset",
      "esperado": "Resetting… y repaint antes de restart mtp",
-     "ubicacion": "spec/main_spec.lua:129"
+     "ubicacion": "spec/main_spec.lua:135"
     },
     {
      "id": "AC-17",
      "entrada": "main: no Kindle",
      "esperado": "{ disabled = true }",
-     "ubicacion": "spec/main_spec.lua:141"
+     "ubicacion": "spec/main_spec.lua:147"
     },
     {
      "id": "AC-18",
      "entrada": "main: carga del plugin",
      "esperado": "0 lecturas lipc",
-     "ubicacion": "spec/main_spec.lua:146"
+     "ubicacion": "spec/main_spec.lua:152"
     },
     {
      "id": "AC-19",
      "entrada": "main: menú",
      "esperado": "sorting_hint network, 4 entradas",
-     "ubicacion": "spec/main_spec.lua:151"
+     "ubicacion": "spec/main_spec.lua:157"
     },
     {
      "id": "AC-20",
@@ -1169,19 +1175,19 @@
      "id": "EG-03",
      "entrada": "Marcador con espacios y líneas en blanco",
      "esperado": "pid 4321",
-     "ubicacion": "spec/parsers_spec.lua:87"
+     "ubicacion": "spec/parsers_spec.lua:92"
     },
     {
      "id": "EG-04",
      "entrada": "Línea de estado 2 de una sesión anterior",
      "esperado": "sigue waiting_host",
-     "ubicacion": "spec/state_spec.lua:316"
+     "ubicacion": "spec/state_spec.lua:320"
     },
     {
      "id": "EG-05",
      "entrada": "wc -l falla al arrancar",
      "esperado": "baseline en el primer tick (2) y detecta host (S8)",
-     "ubicacion": "spec/state_spec.lua:476"
+     "ubicacion": "spec/state_spec.lua:480"
     }
    ],
    "cobertura": "<p>5 de 5 ataques = 100%.</p>",
@@ -1202,12 +1208,12 @@
    "Requieren el equipo; se usan stubs que registran cada efecto de UI en orden (DT-R60-R66, AC-11-AC-19)."
   ]
  ],
- "cobertura_nota": "<p>luacov mide líneas, no ramas, por eso la columna de ramas sale en 0/0. En <code>kindlemtp_core.lua</code> las líneas sin ejecutar son el respaldo de <code>exists</code> sin lfs (lfs está instalado en la máquina de pruebas y en KOReader). En <code>main.lua</code> quedan sin ejecutar ramas de mensajes (probe fallido al pulsar Start, Reset fallido) y la caja de About.</p><h4>Mutation check: 42 de 42 mutantes muertos [demillo]</h4><p><code>python3 spec/mutate.py</code> aplica cada mutante a <code>kindlemtp_core.lua</code> o a <code>main.lua</code>, corre busted y restaura el archivo. El primer pase dejó vivo M25 (se agregó DT-R56); M36 sobrevivió hasta agregar DT-R66.</p><table class='t'><tr><th>ID</th><th>Mutación</th><th>Línea</th><th>Resultado</th><th>Casos que fallaron</th></tr><tr><td>M01</td><td>Drive-mode signal broadcast (no --dest=)</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:300</code></td><td>muerto</td><td>AC-03, AC-04</td></tr><tr><td>M02</td><td>Signal re-sent on every tick in connected</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:297</code></td><td>muerto</td><td>AC-03, BVA-08, DT-R43, ST-I5</td></tr><tr><td>M03</td><td>Timeout uses > instead of >=</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:310</code></td><td>muerto</td><td>AC-05, AC-14, AC-15, BVA-02, BVA-04</td></tr><tr><td>M04</td><td>Timeout 30 s instead of 20 s</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:15</code></td><td>muerto</td><td>AC-05, AC-14, AC-15, BVA-02, BVA-03, BVA-04</td></tr><tr><td>M05</td><td>Stop: udc disable before stopMtp</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:322</code></td><td>muerto</td><td>AC-02, ST-T13, ST-T14, ST-T6</td></tr><tr><td>M06</td><td>Stop skips udc disable</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:323</code></td><td>muerto</td><td>AC-02, DT-R42, ST-T13, ST-T14, ST-T5, ST-T6</td></tr><tr><td>M07</td><td>Stop leaves the marker</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:327</code></td><td>muerto</td><td>AC-02, AC-08, ST-T12, ST-T13, ST-T14, ST-T17, ST-T18, ST-T20, ST-T6, ST-T7, ST-T8, ST-T9</td></tr><tr><td>M08</td><td>Start ignores charging</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:217</code></td><td>muerto</td><td>DT-R54</td></tr><tr><td>M09</td><td>Marker written non-exclusively</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:222</code></td><td>muerto</td><td>AC-01, DT-R59</td></tr><tr><td>M10</td><td>Owner check inverted</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:211</code></td><td>muerto</td><td>BVA-09, BVA-12, DT-R50, DT-R51, EP-54</td></tr><tr><td>M11</td><td>volumd state test uses S instead of T</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:133</code></td><td>muerto</td><td>DT-R11, DT-R12, DT-R8, DT-R9</td></tr><tr><td>M12</td><td>VOLUMD_STOPPED flag ignored</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:129</code></td><td>muerto</td><td>DT-R10</td></tr><tr><td>M13</td><td>Well-known bus name skipped</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:165</code></td><td>muerto</td><td>AC-01, AC-03, EP-20</td></tr><tr><td>M14</td><td>NotCharging ignores the UDC gate</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:95</code></td><td>muerto</td><td>DT-R21, DT-R60</td></tr><tr><td>M15</td><td>Keep-awake never restored</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:189</code></td><td>muerto</td><td>AC-02, AC-08, DT-R40, DT-R55, DT-R56, ST-T14, ST-T17, ST-T6</td></tr><tr><td>M16</td><td>Syslog baseline ignored (reads whole log)</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:255</code></td><td>muerto</td><td>AC-05, AC-06, AC-07, AC-14, AC-15, BVA-01, BVA-02, BVA-03, BVA-04, EG-04</td></tr><tr><td>M17</td><td>Dropout test on nil instead of 0</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:292</code></td><td>muerto</td><td>BVA-08, DT-R42, DT-R43, ST-T6</td></tr><tr><td>M18</td><td>UDC hint disabled</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:272</code></td><td>muerto</td><td>AC-07</td></tr><tr><td>M19</td><td>Release deletes another owner's marker</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:283</code></td><td>muerto</td><td>DT-R40, DT-R41</td></tr><tr><td>M20</td><td>Probe reports the last failure</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:152</code></td><td>muerto</td><td>DT-R9</td></tr><tr><td>M21</td><td>GetConnectionUnixProcessID parser broken</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:58</code></td><td>muerto</td><td>AC-04, EP-03, EP-21</td></tr><tr><td>M22</td><td>sh ignores the exit code</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:361</code></td><td>muerto</td><td>EP-41, EP-45</td></tr><tr><td>M23</td><td>lipc fallback drops -i</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:415</code></td><td>muerto</td><td>EP-48, EP-52</td></tr><tr><td>M24</td><td>Auto-start also in the reader</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:101</code></td><td>muerto</td><td>DT-R32, DT-R65</td></tr><tr><td>M25</td><td>Crash leftover keeps preventScreenSaver 1</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:188</code></td><td>muerto</td><td>DT-R56</td></tr><tr><td>M27</td><td>isMtpStarted read on every tick</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:288</code></td><td>muerto</td><td>BVA-08</td></tr><tr><td>M28</td><td>Unreadable lipc treated as a stale marker</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:209</code></td><td>muerto</td><td>DT-R58</td></tr><tr><td>M29</td><td>Load-time probe still reads lipc</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:146</code></td><td>muerto</td><td>AC-18, DT-R15</td></tr><tr><td>M37</td><td>Losing the marker race tears down KOBridge's session</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:224</code></td><td>muerto</td><td>DT-R59</td></tr><tr><td>M38</td><td>Reset before the marker claim</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:220</code></td><td>muerto</td><td>AC-01, DT-R42, DT-R59, ST-T10</td></tr><tr><td>M39</td><td>A failed claim tears down</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:230</code></td><td>muerto</td><td>ST-T10</td></tr><tr><td>M40</td><td>Marker stale one second late (> instead of >=)</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:77</code></td><td>muerto</td><td>BVA-10</td></tr><tr><td>M41</td><td>Marker age ignored (stale whenever isMtpStarted is 0)</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:77</code></td><td>muerto</td><td>BVA-09, BVA-12, EP-53, EP-54</td></tr><tr><td>M42</td><td>Marker since not taken from the device clock</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:221</code></td><td>muerto</td><td>AC-20</td></tr><tr><td>M26</td><td>Host check after the timeout check</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:299</code></td><td>muerto</td><td>BVA-05</td></tr><tr><td>M30</td><td>CloseWidget refreshes a closing browser</td><td><code>kindlemtp.koplugin/main.lua:179</code></td><td>muerto</td><td>DT-R62</td></tr><tr><td>M31</td><td>No repaint before Reset</td><td><code>kindlemtp.koplugin/main.lua:242</code></td><td>muerto</td><td>AC-16</td></tr><tr><td>M32</td><td>NotCharging ignores the UDC state</td><td><code>kindlemtp.koplugin/main.lua:175</code></td><td>muerto</td><td>DT-R60</td></tr><tr><td>M33</td><td>Settings not flushed before Start</td><td><code>kindlemtp.koplugin/main.lua:149</code></td><td>muerto</td><td>AC-11</td></tr><tr><td>M34</td><td>Load-time probe reads lipc</td><td><code>kindlemtp.koplugin/main.lua:74</code></td><td>muerto</td><td>AC-18</td></tr><tr><td>M35</td><td>PluginShare never restored</td><td><code>kindlemtp.koplugin/main.lua:97</code></td><td>muerto</td><td>AC-12</td></tr><tr><td>M36</td><td>Auto-start ignores that the file manager closed during the delay</td><td><code>kindlemtp.koplugin/main.lua:276</code></td><td>muerto</td><td>DT-R66</td></tr></table>",
+ "cobertura_nota": "<p>luacov mide líneas, no ramas, por eso la columna de ramas sale en 0/0. En <code>kindlemtp_core.lua</code> las líneas sin ejecutar son el respaldo de <code>exists</code> sin lfs (lfs está instalado en la máquina de pruebas y en KOReader). En <code>main.lua</code> quedan sin ejecutar ramas de mensajes (probe fallido al pulsar Start, Reset fallido) y la caja de About.</p><h4>Mutation check: 43 de 43 mutantes muertos [demillo]</h4><p><code>python3 spec/mutate.py</code> aplica cada mutante a <code>kindlemtp_core.lua</code> o a <code>main.lua</code>, corre busted y restaura el archivo. El primer pase dejó vivo M25 (se agregó DT-R56); M36 sobrevivió hasta agregar DT-R66.</p><table class='t'><tr><th>ID</th><th>Mutación</th><th>Línea</th><th>Resultado</th><th>Casos que fallaron</th></tr><tr><td>M01</td><td>Drive-mode signal broadcast (no --dest=)</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:300</code></td><td>muerto</td><td>AC-03, AC-04</td></tr><tr><td>M02</td><td>Signal re-sent on every tick in connected</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:297</code></td><td>muerto</td><td>AC-03, BVA-08, DT-R43, ST-I5</td></tr><tr><td>M03</td><td>Timeout uses > instead of >=</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:310</code></td><td>muerto</td><td>AC-05, AC-14, AC-15, BVA-02, BVA-04</td></tr><tr><td>M04</td><td>Timeout 30 s instead of 20 s</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:15</code></td><td>muerto</td><td>AC-05, AC-14, AC-15, BVA-02, BVA-03, BVA-04</td></tr><tr><td>M05</td><td>Stop: udc disable before stopMtp</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:322</code></td><td>muerto</td><td>AC-02, ST-T13, ST-T14, ST-T6</td></tr><tr><td>M06</td><td>Stop skips udc disable</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:323</code></td><td>muerto</td><td>AC-02, DT-R42, ST-T13, ST-T14, ST-T5, ST-T6</td></tr><tr><td>M07</td><td>Stop leaves the marker</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:327</code></td><td>muerto</td><td>AC-02, AC-08, ST-T12, ST-T13, ST-T14, ST-T17, ST-T18, ST-T20, ST-T6, ST-T7, ST-T8, ST-T9</td></tr><tr><td>M08</td><td>Start ignores charging</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:217</code></td><td>muerto</td><td>DT-R54</td></tr><tr><td>M09</td><td>Marker written non-exclusively</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:222</code></td><td>muerto</td><td>AC-01, DT-R59</td></tr><tr><td>M10</td><td>Owner check inverted</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:211</code></td><td>muerto</td><td>BVA-09, BVA-12, DT-R50, DT-R51, EP-54</td></tr><tr><td>M11</td><td>volumd state test uses S instead of T</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:133</code></td><td>muerto</td><td>DT-R11, DT-R12, DT-R8, DT-R9</td></tr><tr><td>M12</td><td>VOLUMD_STOPPED flag ignored</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:129</code></td><td>muerto</td><td>DT-R10</td></tr><tr><td>M13</td><td>Well-known bus name skipped</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:165</code></td><td>muerto</td><td>AC-01, AC-03, EP-20</td></tr><tr><td>M14</td><td>NotCharging ignores the UDC gate</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:95</code></td><td>muerto</td><td>DT-R21, DT-R60</td></tr><tr><td>M15</td><td>Keep-awake never restored</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:189</code></td><td>muerto</td><td>AC-02, AC-08, DT-R40, DT-R55, DT-R56, ST-T14, ST-T17, ST-T6</td></tr><tr><td>M16</td><td>Syslog baseline ignored (reads whole log)</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:255</code></td><td>muerto</td><td>AC-05, AC-06, AC-07, AC-14, AC-15, BVA-01, BVA-02, BVA-03, BVA-04, EG-04</td></tr><tr><td>M17</td><td>Dropout test on nil instead of 0</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:292</code></td><td>muerto</td><td>BVA-08, DT-R42, DT-R43, ST-T6</td></tr><tr><td>M18</td><td>UDC hint disabled</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:272</code></td><td>muerto</td><td>AC-07</td></tr><tr><td>M19</td><td>Release deletes another owner's marker</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:283</code></td><td>muerto</td><td>DT-R40, DT-R41</td></tr><tr><td>M20</td><td>Probe reports the last failure</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:152</code></td><td>muerto</td><td>DT-R9</td></tr><tr><td>M21</td><td>GetConnectionUnixProcessID parser broken</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:58</code></td><td>muerto</td><td>AC-04, EP-03, EP-21</td></tr><tr><td>M22</td><td>sh ignores the exit code</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:361</code></td><td>muerto</td><td>EP-41, EP-45</td></tr><tr><td>M23</td><td>lipc fallback drops -i</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:415</code></td><td>muerto</td><td>EP-48, EP-52</td></tr><tr><td>M24</td><td>Auto-start also in the reader</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:101</code></td><td>muerto</td><td>DT-R32, DT-R65</td></tr><tr><td>M25</td><td>Crash leftover keeps preventScreenSaver 1</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:188</code></td><td>muerto</td><td>DT-R56</td></tr><tr><td>M27</td><td>isMtpStarted read on every tick</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:288</code></td><td>muerto</td><td>BVA-08</td></tr><tr><td>M28</td><td>Unreadable lipc treated as a stale marker</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:209</code></td><td>muerto</td><td>DT-R58</td></tr><tr><td>M29</td><td>Load-time probe still reads lipc</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:146</code></td><td>muerto</td><td>AC-18, DT-R15</td></tr><tr><td>M37</td><td>Losing the marker race tears down KOBridge's session</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:224</code></td><td>muerto</td><td>DT-R59</td></tr><tr><td>M38</td><td>Reset before the marker claim</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:220</code></td><td>muerto</td><td>AC-01, DT-R42, DT-R59, ST-T10</td></tr><tr><td>M39</td><td>A failed claim tears down</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:230</code></td><td>muerto</td><td>ST-T10</td></tr><tr><td>M40</td><td>Marker stale one second late (> instead of >=)</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:77</code></td><td>muerto</td><td>BVA-10</td></tr><tr><td>M41</td><td>Marker age ignored (stale whenever isMtpStarted is 0)</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:77</code></td><td>muerto</td><td>BVA-09, BVA-12, EP-53, EP-54</td></tr><tr><td>M42</td><td>Marker since not taken from the device clock</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:221</code></td><td>muerto</td><td>AC-20</td></tr><tr><td>M26</td><td>Host check after the timeout check</td><td><code>kindlemtp.koplugin/kindlemtp_core.lua:299</code></td><td>muerto</td><td>BVA-05</td></tr><tr><td>M30</td><td>CloseWidget refreshes a closing browser</td><td><code>kindlemtp.koplugin/main.lua:186</code></td><td>muerto</td><td>DT-R62</td></tr><tr><td>M31</td><td>No repaint before Reset</td><td><code>kindlemtp.koplugin/main.lua:249</code></td><td>muerto</td><td>AC-16</td></tr><tr><td>M32</td><td>NotCharging ignores the UDC state</td><td><code>kindlemtp.koplugin/main.lua:182</code></td><td>muerto</td><td>DT-R60</td></tr><tr><td>M33</td><td>Settings not flushed before Start</td><td><code>kindlemtp.koplugin/main.lua:156</code></td><td>muerto</td><td>AC-11</td></tr><tr><td>M34</td><td>Load-time probe reads lipc</td><td><code>kindlemtp.koplugin/main.lua:78</code></td><td>muerto</td><td>AC-18</td></tr><tr><td>M35</td><td>PluginShare never restored</td><td><code>kindlemtp.koplugin/main.lua:101</code></td><td>muerto</td><td>AC-12</td></tr><tr><td>M43</td><td>File browser refreshed at once, before fsp catches up</td><td><code>kindlemtp.koplugin/main.lua:123</code></td><td>muerto</td><td>AC-12</td></tr><tr><td>M36</td><td>Auto-start ignores that the file manager closed during the delay</td><td><code>kindlemtp.koplugin/main.lua:283</code></td><td>muerto</td><td>DT-R66</td></tr></table>",
  "defectos": [],
- "riesgo_residual": "<p><b>Sin verificar en el equipo</b>: que <code>com.lab126.mtp</code> aparezca en ListNames, que la línea de estado 2 se registre sin <code>enableDebugLog</code>, el formato real de <code>dbus-send</code> y de <code>/sys/class/udc/*/state</code>. <code>device-checks.txt</code> llegó vacío, así que esos fixtures son sintéticos. <b>main.lua</b> se prueba contra stubs: que los widgets reales de KOReader se comporten como los stubs (ButtonDialog no descartable, setTitle, forceRePaint) se confirma con el checklist de equipo del README. El retardo de 2 s antes del auto-start es un valor de calibración sin medir. Siguiente paso: correr <code>device-checks.sh</code>, reemplazar los fixtures sintéticos por los capturados y repetir la suite.</p>",
+ "riesgo_residual": "<p><b>Verificado en el equipo el 2026-10-16</b>: com.lab126.mtp en ListNames, la línea de estado 2 sin debug, el formato de <code>dbus-send</code>, VOLUMD_STOPPED=yes, liblipclua presente y la prueba USB en vivo de KOBridge (4→1→2→3→4, Wi-Fi arriba). <b>Sin capturar</b>: la cinta UDC con cargador; el espaciado real de la cinta con host (el <code>sleep 0.5</code> del script falló en BusyBox). <b>main.lua</b> se prueba contra stubs: que los widgets reales de KOReader se comporten como los stubs (ButtonDialog no descartable, setTitle, forceRePaint) se confirma con el checklist de equipo del README. El retardo de 2 s antes del auto-start es un valor de calibración sin medir. Siguiente paso: el checklist de equipo del README con el plugin instalado, y capturar la cinta con cargador.</p>",
  "decision": {
   "veredicto": "adv",
-  "texto": "<p><b>Liberar con condiciones</b>: la suite pasa completa y mata los 42 mutantes, pero los fixtures de D-Bus, UDC y /proc son sintéticos. Liberar v1.0.0 después de completar el checklist de equipo del README en un Paperwhite con 5.18.5.</p>",
+  "texto": "<p><b>Liberar con condiciones</b>: la suite pasa completa, mata los 43 mutantes y usa capturas del equipo, pero el plugin instalado aún no pasó el checklist. Liberar v1.0.0 después de completar el checklist de equipo del README en un Paperwhite con 5.18.5.</p>",
   "semaforo": [
    [
     "Liberar",
@@ -1215,7 +1221,7 @@
    ],
    [
     "Liberar con condiciones",
-    "Suite y mutantes al 100% con fixtures sintéticos; checklist de equipo pendiente"
+    "Suite y mutantes al 100%; checklist de equipo pendiente"
    ],
    [
     "No liberar",
