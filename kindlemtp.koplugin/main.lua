@@ -106,14 +106,15 @@ local function refreshFileManager()
     end
 end
 
-local function finish(reason)
+-- skip_refresh: the file manager is closing (CloseWidget), so there is nothing to refresh.
+local function finish(reason, skip_refresh)
     UIManager:unschedule(tick)
     releaseAwake()
     if dialog then
         UIManager:close(dialog)
         dialog = nil
     end
-    refreshFileManager()
+    if not skip_refresh then refreshFileManager() end
     if reason and not (reason == "timeout" and auto_started) then
         showReason(reason)
     end
@@ -175,7 +176,7 @@ local function stopOn(event)
     if Mtp.stop_trigger(event, active, udc_configured) then
         logger.info("kindlemtp: stopping on", event)
         core:stop()
-        finish()
+        finish(nil, event == "CloseWidget")
     end
 end
 
@@ -235,7 +236,12 @@ function KindleMTP:addToMainMenu(menu_items)
                         text = _("Restart the MTP responder (tizen-mtp) and unbind the USB gadget?\n\nUse this when the computer no longer sees the Kindle, or after KOReader crashed during a transfer."),
                         ok_text = _("Reset"),
                         ok_callback = function()
+                            -- restart mtp takes a few seconds; show why the screen is busy.
+                            local busy = InfoMessage:new{ text = _("Resetting…") }
+                            UIManager:show(busy)
+                            UIManager:forceRePaint()
                             local ok, err = core:reset()
+                            UIManager:close(busy)
                             finish(not ok and err or nil)
                             if ok then
                                 UIManager:show(InfoMessage:new{
