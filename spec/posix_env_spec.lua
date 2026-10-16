@@ -1,5 +1,5 @@
 -- Production env adapter, run for real on the build machine (sh, files) with lipc stubbed.
-local Mtp = require("mtp")
+local Mtp = require("kindlemtp_core")
 
 local function tmpdir()
     local env = Mtp.posix_env{ liblipc = false }

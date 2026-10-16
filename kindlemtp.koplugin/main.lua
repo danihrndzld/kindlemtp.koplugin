@@ -1,7 +1,7 @@
 --[[--
 USB file transfer (MTP) for KOReader on MTP-era Kindles.
 
-Thin widget layer: menu, events, dialogs and scheduling. The device logic is in mtp.lua.
+Thin widget layer: menu, events, dialogs and scheduling. The device logic is in kindlemtp_core.lua.
 The core, the dialog and the poll function are module-level: plugin instances die on every
 file manager <-> reader switch, and UIManager:unschedule() needs the same function reference.
 ]]
@@ -21,7 +21,7 @@ local WidgetContainer = require("ui/widget/container/widgetcontainer")
 local logger = require("logger")
 local time = require("ui/time")
 local _ = require("gettext")
-local Mtp = require("mtp")
+local Mtp = require("kindlemtp_core")
 
 -- Wait after Charging before an auto-start, so the responder has seen the cable (usb_plugin) first.
 local AUTOSTART_DELAY = 2
@@ -82,7 +82,7 @@ local function showReason(reason)
     })
 end
 
--- preventScreenSaver is handled by mtp.lua; these keep KOReader's own timers off.
+-- preventScreenSaver is handled by kindlemtp_core.lua; these keep KOReader's own timers off.
 local function keepAwake()
     if saved_share then return end
     saved_share = { pause = PluginShare.pause_auto_suspend, keepalive = PluginShare.keepalive }

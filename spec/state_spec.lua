@@ -1,5 +1,5 @@
--- State machine of mtp.lua: transitions, the recipe's command order, timeout boundaries, marker contract.
-local Mtp = require("mtp")
+-- State machine of kindlemtp_core.lua: transitions, the recipe's command order, timeout boundaries, marker contract.
+local Mtp = require("kindlemtp_core")
 local F = require("fake_env")
 
 local LIST_NAMES = "sh /usr/bin/dbus-send --system --print-reply --dest=org.freedesktop.DBus"

@@ -1,5 +1,5 @@
--- Fake env for mtp.lua: a scripted Kindle that records every side effect in order.
-local Mtp = require("mtp")
+-- Fake env for kindlemtp_core.lua: a scripted Kindle that records every side effect in order.
+local Mtp = require("kindlemtp_core")
 
 local F = {}
 

@@ -1,11 +1,11 @@
-"""Mutation check: applies each mutant to mtp.lua, runs busted, restores the file.
+"""Mutation check: applies each mutant to kindlemtp_core.lua, runs busted, restores the file.
 
 Usage (repo root, busted on PATH): python3 spec/mutate.py [results.json]
 Exits 1 if any mutant survives.
 """
 import json, os, re, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-F = "kindlemtp.koplugin/mtp.lua"
+F = "kindlemtp.koplugin/kindlemtp_core.lua"
 M = [
  ("M01", "Drive-mode signal broadcast (no --dest=)", '" --system --dest=" .. self.dest\n            .. " --type=signal', '" --system"\n            .. " --type=signal'),
  ("M02", "Signal re-sent on every tick in connected", 'if self.state == "connected" then return nil end', ''),

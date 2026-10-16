@@ -1,5 +1,5 @@
 -- Probe: 7 checks, each with its own reason (decision table, one failing condition per rule).
-local Mtp = require("mtp")
+local Mtp = require("kindlemtp_core")
 local F = require("fake_env")
 
 local function probe(setup, is_kindle)

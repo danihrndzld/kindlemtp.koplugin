@@ -1,5 +1,5 @@
 -- Pure parsers of device output, fed with fixtures in spec/fixtures/.
-local Mtp = require("mtp")
+local Mtp = require("kindlemtp_core")
 local F = require("fake_env")
 
 describe("parsers", function()

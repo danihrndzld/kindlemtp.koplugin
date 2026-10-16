@@ -72,7 +72,7 @@ Storefront rebuilds its catalog on its own schedule, so a new release can take a
    ```
    koreader/plugins/kindlemtp.koplugin/_meta.lua
    koreader/plugins/kindlemtp.koplugin/main.lua
-   koreader/plugins/kindlemtp.koplugin/mtp.lua
+   koreader/plugins/kindlemtp.koplugin/kindlemtp_core.lua
    ```
 
 3. Restart KOReader.
@@ -166,7 +166,7 @@ Details that matter:
 - **The marker file** `/tmp/kindlemtp.active` holds one line, `owner=plugin pid=<N> since=<epoch>`, created atomically with the shell's noclobber option. The KOBridge desktop app uses the same file, so the two never run a transfer at the same time. A marker only counts while `lipc-get-prop com.lab126.mtp isMtpStarted` reads 1.
 - **Before Start** the plugin runs 7 checks: the device is a Kindle; `/usr/bin/mtp.sh` exists; `/sys/kernel/config/usb_gadget/mtpgadget` exists; `tizen-mtp` is running; `/usr/bin/dbus-send` exists; `com.lab126.mtp` answers over lipc; and `volumd` is paused (`VOLUMD_STOPPED=yes` from the launcher, or state `T` in `/proc/<pid>/stat`).
 
-All of this is in `kindlemtp.koplugin/mtp.lua`, which does not depend on KOReader. `main.lua` holds the menu, the dialog and the event handling. The full design is in [docs/design.md](docs/design.md).
+All of this is in `kindlemtp.koplugin/kindlemtp_core.lua`, which does not depend on KOReader. `main.lua` holds the menu, the dialog and the event handling. The full design is in [docs/design.md](docs/design.md).
 
 ## Limits
 
@@ -199,7 +199,7 @@ Run this list on a real Kindle before each release, and when reporting a new mod
 
 ## Development
 
-The core (`mtp.lua`) takes all its side effects through an injected `env` table (shell commands, file access, lipc, clock, charging state, logging), so its tests run on any computer with LuaJIT. The tests use a fake env that records every command in order (`spec/fake_env.lua`) and device outputs in `spec/fixtures/`.
+The core (`kindlemtp_core.lua`) takes all its side effects through an injected `env` table (shell commands, file access, lipc, clock, charging state, logging), so its tests run on any computer with LuaJIT. The tests use a fake env that records every command in order (`spec/fake_env.lua`) and device outputs in `spec/fixtures/`.
 
 Install the tools once (macOS with Homebrew LuaJIT shown; on Linux drop `--lua-dir`):
 
@@ -220,7 +220,7 @@ luacheck kindlemtp.koplugin spec
 
 Every test name starts with a test-design ID (`EP-` equivalence partition, `BVA-` boundary value, `DT-R` decision-table rule, `ST-T`/`ST-I` valid and invalid state transition, `AC-` criterion from the design, `EG-` error guess).
 
-Mutation check (breaks 26 key behaviors in `mtp.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
+Mutation check (breaks 26 key behaviors in `kindlemtp_core.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
 
 ```sh
 python3 spec/mutate.py docs/test-report/mutants.json

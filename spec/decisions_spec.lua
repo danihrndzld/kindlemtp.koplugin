@@ -1,5 +1,5 @@
 -- Decision tables for main.lua's event handling: which KOReader events stop, and when Charging auto-starts.
-local Mtp = require("mtp")
+local Mtp = require("kindlemtp_core")
 
 describe("stop triggers", function()
     it("DT-R20 NotCharging while active and UDC not configured stops", function()
