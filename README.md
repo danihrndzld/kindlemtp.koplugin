@@ -38,7 +38,7 @@ It also:
 
 | Device | Status |
 |---|---|
-| Kindle Paperwhite, firmware 5.18.5 (kernel 5.15.41-lab126) | Verified by hand on 2026-10-15 |
+| Kindle Paperwhite, firmware 5.18.5 (kernel 5.15.41-lab126) | The command sequence was verified by hand on 2026-10-15; the plugin itself still has to pass the [device checklist](#device-checklist-for-testers) |
 | Other Kindles on firmware 5.16 or later that have `/usr/bin/mtp.sh` | Expected to work, not tested yet |
 | Kindles on firmware older than 5.16 | Not needed: they use USB mass storage, which works without this plugin |
 | Kobo, PocketBook, Android and other KOReader platforms | Not supported; the plugin disables itself |
