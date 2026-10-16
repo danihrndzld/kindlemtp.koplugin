@@ -167,6 +167,21 @@ describe("start", function()
         assert.are.equal(0, e.props["com.lab126.mtp isMtpStarted"])
     end)
 
+    it("DT-R59 KOBridge creates its marker first: owner_other, its session is left running", function()
+        local core, e = F.core()
+        local write = e.write
+        e.write = function(path, text, exclusive)
+            marker(e, "kobridge") -- KOBridge wins the race between startMtp and the marker
+            return write(path, text, exclusive)
+        end
+        assert.are.same({ nil, "owner_other" }, { core:start() })
+        local a = e.actions()
+        assert.matches("^write /tmp/kindlemtp%.active owner=plugin .* exclusive$", a[#a])
+        assert.are.equal("kobridge", Mtp.parse_marker(e.contents[Mtp.MARKER]).owner)
+        assert.are.equal(1, e.props["com.lab126.mtp isMtpStarted"])
+        assert.are.equal("idle", core.state)
+    end)
+
     it("ST-T12 failed -> waiting_host on a new start", function()
         local core, e = F.core(function(e) e.start_ok = false end)
         core:start()

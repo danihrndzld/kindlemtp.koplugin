@@ -35,6 +35,7 @@ M = [
  ("M27", "isMtpStarted read on every tick", 'now - self.lipc_at >= M.LIPC_INTERVAL', 'true'),
  ("M28", "Unreadable lipc treated as a stale marker", 'if started == nil then return nil, "no_lipc" end', ''),
  ("M29", "Load-time probe still reads lipc", 'skip_lipc == true or self:started() ~= nil', 'self:started() ~= nil'),
+ ("M37", "Losing the marker race tears down KOBridge's session", 'if other and other.owner ~= "plugin" then', 'if false then'),
  ("M26", "Host check after the timeout check", None, None),
 ]
 MAIN = "kindlemtp.koplugin/main.lua"

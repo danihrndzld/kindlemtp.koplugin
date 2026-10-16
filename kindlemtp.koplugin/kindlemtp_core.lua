@@ -214,7 +214,16 @@ function M:start()
     self.baseline = tonumber(trim(self:sh("wc -l < " .. M.SYSLOG)))
     if not env.lipc.set_int(M.BUS, "startMtp", 1) then return self:fail("startmtp_failed") end
     local line = string.format("owner=plugin pid=%d since=%d\n", self.pid, os.time())
-    if not env.write(M.MARKER, line, true) then return self:fail("marker_failed") end
+    if not env.write(M.MARKER, line, true) then
+        local other = M.parse_marker(env.read(M.MARKER))
+        if other and other.owner ~= "plugin" then
+            -- Lost the race to KOBridge: the responder is its session now, so leave it running.
+            self:log("warn", "marker taken by " .. other.owner .. ", backing off")
+            self.state = "idle"
+            return nil, "owner_other"
+        end
+        return self:fail("marker_failed")
+    end
     self.saved_pss = stale_plugin and 0 or (env.lipc.get_int(M.POWERD, "preventScreenSaver") or 0)
     env.lipc.set_int(M.POWERD, "preventScreenSaver", 1)
 
