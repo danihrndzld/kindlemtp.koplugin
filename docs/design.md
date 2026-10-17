@@ -52,7 +52,7 @@ KOReader's launcher (`platform/kindle/koreader.sh`) sends SIGSTOP to `volumd` in
 - "Connected. Your computer can see the Kindle's files." after the drive-mode signal.
 - An error text with the step that failed.
 
-**Start needs power on the cable.** `startMtp` is silently skipped by the responder without USB power (`usb_plugin` unset), while `isMtpStarted` still reads 1 (it is a flag, not a state). Start is refused when `Device.powerd:isCharging()` is false ("Connect the cable first").
+**Start needs power on the cable.** `startMtp` is silently skipped by the responder without USB power (`usb_plugin` unset), while `isMtpStarted` still reads 1 (it is a flag, not a state). Start is refused when no cable is detected ("Connect the cable first"). Revised 2026-10-16: charging alone failed with a Full battery, which stops charging with the cable in. `cable_detected()` counts a cable when charging, when any `/sys/class/udc/*/state` reads something other than `not attached`, or when a power supply of type `Mains` or `USB*` other than `USB_WET` reads `online` 1. On the Paperwhite with the cable out (captured 2026-10-16) `bd71827_bat` (Battery) and `max20342_moisture` (USB_WET) read online 1 and `bd71827_ac` (Mains) and `Wireless` read 0, hence the type filter. Not yet verified: whether `bd71827_ac` reads 1 on a computer USB port with a Full battery. The `waiting_host` NotCharging gate uses the same test.
 
 **Stops automatically** on:
 - `NotCharging`, but only when `/sys/class/udc/*/state` is not `configured`. `NotCharging` also fires when the battery reads Full with the cable still in. While waiting for the host (about 1 s) the UDC is not configured yet, so there the event stops only if `Device.powerd:isCharging()`, re-read at the event, is false (revised 2026-10-16).
@@ -114,7 +114,7 @@ States: `idle → starting → waiting_host → connected → stopping → idle`
 
 - **start()**: refuses with `already_active` when the marker exists and is valid, or `owner_other` when another owner holds it; refuses `no_power` without charging. Then claim the marker (exclusive write), and only after that reset, record the syslog line count and send `startMtp 1`. The marker is the lock shared with KOBridge, so it must be taken before touching the responder: a lost race (the exclusive write fails because a KOBridge marker exists) returns `owner_other` with zero device commands, and any failure after the claim tears down and removes our own marker. Moves to `waiting_host`. (Revised 2026-10-16; the first version wrote the marker after `startMtp`, so a lost race had already reset KOBridge's session.) The responder itself ignores a second `startMtp` outside states 0 and 4.
 - **poll()** (every 250 ms from `UIManager:scheduleIn`, never blocking): detects state 2 (rule below), then sends the drive-mode signal once and moves to `connected`. After 20 s without a host it stops quietly and returns `timeout`. In `connected`, a 0 from `isMtpStarted` means the responder dropped out: stop.
-- **stop()**: idempotent from every state, whoever owns the marker: `stopMtp 1`, then `mtp.sh udc disable` (needed: `stopMtp` from state 3 does not unbind the UDC), restore keep-awake, remove the marker. Moves to `idle`. After an unplug in `waiting_host` the responder parks in state 1 or 2 and only `stopMtp` clears it, so `NotCharging` must drive stop.
+- **stop()**: idempotent from every state, whoever owns the marker: `stopMtp 1`, then `mtp.sh udc disable` (needed: `stopMtp` from state 3 does not unbind the UDC), then `sync` (tizen-mtp never fsyncs; the duration is logged), restore keep-awake, remove the marker, and, only if `isMtpStarted` reads 0 and no new marker was claimed, `rm -rf /mnt/base-us/.mtp-tmp` (staging leftovers of an interrupted transfer). Moves to `idle`. After an unplug in `waiting_host` the responder parks in state 1 or 2 and only `stopMtp` clears it, so `NotCharging` must drive stop.
 - **reset()**: `restart mtp`, then stop.
 - No "active" flag lives in the widget instance (instances die on every file manager ↔ reader switch). The truth is the marker plus `isMtpStarted`.
 
@@ -152,6 +152,15 @@ Use `pcall(require, "liblipclua")` with `lipc.init("com.github.koreader.kindlemt
 - fsp lag (measured 2026-10-16): a file written to `/mnt/base-us` shows in `/mnt/us` at once, but a file deleted there can still be listed in `/mnt/us` for about 1 s. `refreshPath()` after stop is still right; main.lua runs it 1 s after the stop.
 
 ## Device facts (2026-10-16, Paperwhite 5.18.5)
+
+From reverse engineering of the stock binaries (`scratchpad/decomp/{volumd.ann.c,fsp.full.c,tizen-mtp.ann.c}`), prompted by a community warning about userstore corruption:
+
+- MTP writes through the Kindle's own ext4 driver: one writer, unlike USB mass storage, which exports the block device. ext4 corruption is not the MTP risk.
+- Stock `volumd` never syncs or remounts for MTP. It fences `fsp` with `/sem-fsp`, which makes all `/mnt/us` I/O return `ESTALE`. The plugin cannot copy that because KOReader runs from `/mnt/us`.
+- `fsp` is a pure path passthrough that reopens the path on every read and write and keeps no handles, so a file replaced or deleted on `/mnt/base-us` under KOReader is seen at once, even mid-read.
+- `tizen-mtp` imports no `fsync`. Transfers go to `/mnt/base-us/.mtp-tmp` and are then renamed into place.
+
+Measured on the device:
 
 - `com.lab126.mtp` is a well-known D-Bus name; `:1.3` is tizen-mtp's unique name on this boot.
 - KOReader's environment has `VOLUMD_STOPPED=yes` and `STOP_FRAMEWORK=yes`; `volumd` is in state `T`.

@@ -12,6 +12,7 @@ It is for Kindles that talk MTP over USB, which is every Kindle on firmware 5.16
 - [Install](#install)
 - [Usage](#usage)
 - [What is blocked during a transfer, and why](#what-is-blocked-during-a-transfer-and-why)
+- [Safety](#safety)
 - [Apps on the computer](#apps-on-the-computer)
 - [Troubleshooting and recovery](#troubleshooting-and-recovery)
 - [How it works](#how-it-works)
@@ -106,7 +107,20 @@ If no computer answers within 20 seconds of Start, the plugin stops and says so.
 
 Before starting, the plugin asks KOReader to write all its settings to disk, so the files the computer sees are current.
 
-**Do not delete or edit the `koreader` folder from the computer while KOReader is running.** KOReader keeps files open there (settings, history, the statistics database) and will write over your changes or fail.
+**Do not delete or edit the `koreader` folder from the computer while KOReader is running.** KOReader keeps files open there (settings, history, the statistics database) and will write over your changes or fail. See [Safety](#safety).
+
+## Safety
+
+A community report warned that USB transfers with a jailbroken Kindle can corrupt the user storage. We read the stock `volumd`, `fsp` and `tizen-mtp` binaries to check what applies here.
+
+**Why MTP is different from USB mass storage.** With USB mass storage the computer writes raw blocks to the same partition the Kindle has mounted, so two file systems drivers write one disk. With MTP there is one writer: `tizen-mtp` receives files over USB and writes them through the Kindle's own ext4 driver. Corrupting the ext4 file system is therefore not the risk here.
+
+**The real risks, and what to do about them:**
+
+- **Editing or updating `koreader/` from the computer while KOReader runs.** KOReader reads its own files through `/mnt/us`, which is the `fsp` layer. `fsp` opens the path again on every read and write and keeps no open files, so a file replaced or deleted from the computer is seen at once, even in the middle of a read. KOReader can then load a mix of old and new files, or crash. The stock firmware avoids this by blocking all of `/mnt/us` during a transfer; that is not possible here because KOReader runs from `/mnt/us`. Update KOReader or its plugins with KOReader closed.
+- **Unplugging before Stop.** `tizen-mtp` never calls `fsync`: it writes each transfer to `/mnt/base-us/.mtp-tmp` and renames it into place. Tap **Stop transfer** and wait for the dialog to close before you unplug or put the Kindle to sleep. Stop runs `sync`, so the copied books reach flash memory, and then removes leftovers in `.mtp-tmp` from an interrupted transfer.
+- **Power loss right after a copy** (empty battery, forced reboot) can leave a book as a zero-length file. The stock firmware has the same exposure. Copy the book again.
+- **Books open in KOReader.** Start is refused while a book is open, as described above.
 
 ## Apps on the computer
 
@@ -120,7 +134,7 @@ Before starting, the plugin asks KOReader to write all its settings to disk, so 
 
 **The menu entry is greyed out.** A book is open. Close it and start from the file browser.
 
-**"Connect the USB cable to the computer first."** KOReader does not see power on the cable. Check the cable and the port. The responder silently ignores a start request without USB power, so the plugin refuses instead.
+**"Connect the USB cable to the computer first."** The plugin found no sign of a cable. It counts a cable when KOReader reports charging, when the USB controller (`/sys/class/udc/*/state`) reads anything other than `not attached`, or when a power supply of type `Mains` or `USB` (not `USB_WET`) in `/sys/class/power_supply/` reads `online` 1; the last two cover a Full battery, which stops charging with the cable still in. The battery, the moisture sensor (`USB_WET`) and the wireless supply are skipped because they read online 1 with no cable. Not yet verified: whether `bd71827_ac` (type Mains) reads 1 on a computer's USB port with a Full battery. Check the cable and the port. The responder silently ignores a start request without USB power, so the plugin refuses instead.
 
 **"volumd is running, so the Kindle already handles USB itself."** KOReader was not started through `koreader.sh`. Start it from KUAL. In this case the stock USB flow works anyway: exit KOReader and the Kindle's own USB screen appears.
 
@@ -134,7 +148,7 @@ Before starting, the plugin asks KOReader to write all its settings to disk, so 
 
 **After a crash.** If KOReader crashed during a transfer, two things stay on until the next Start or Reset: the screensaver stays off, and the USB gadget stays bound. **Reset the USB responder** clears both. Rebooting the Kindle also clears them.
 
-What Reset does, step by step: `restart mtp` (restarts the `tizen-mtp` responder), `lipc-set-prop -i com.lab126.mtp stopMtp 1`, `/usr/bin/mtp.sh udc disable`, restores `preventScreenSaver`, and removes `/tmp/kindlemtp.active`.
+What Reset does, step by step: `restart mtp` (restarts the `tizen-mtp` responder), `lipc-set-prop -i com.lab126.mtp stopMtp 1`, `/usr/bin/mtp.sh udc disable`, `sync`, restores `preventScreenSaver`, removes `/tmp/kindlemtp.active`, and removes `/mnt/base-us/.mtp-tmp` once the responder reads stopped.
 
 Logs: every line the plugin writes to KOReader's `crash.log` starts with `kindlemtp:`. The responder logs to `/var/log/messages` as `mtp-responder`.
 
@@ -154,7 +168,7 @@ With KOReader running, `volumd` is paused, so steps 1 and 3 never happen. The pl
 | Reset | `/usr/bin/mtp.sh udc disable`; `lipc-set-prop -i com.lab126.mtp stopMtp 1` | any → 4 |
 | Start | `lipc-set-prop -i com.lab126.mtp startMtp 1` | 0 or 4 → 1; the computer configures USB → 2 |
 | Drive mode | `dbus-send --system --dest=com.lab126.mtp --type=signal /default com.lab126.volumd.driveModeStateChanged int32:1` | 2 → 3, the computer can open a session |
-| Stop | `lipc-set-prop -i com.lab126.mtp stopMtp 1`; `/usr/bin/mtp.sh udc disable` | 3 → 4 |
+| Stop | `lipc-set-prop -i com.lab126.mtp stopMtp 1`; `/usr/bin/mtp.sh udc disable`; `sync`; then, if `isMtpStarted` reads 0 and no new marker exists, `rm -rf /mnt/base-us/.mtp-tmp` | 3 → 4 |
 | Wedged | `restart mtp` | restarts the responder |
 
 Details that matter:
@@ -221,7 +235,7 @@ luacheck kindlemtp.koplugin spec
 
 Every test name starts with a test-design ID (`EP-` equivalence partition, `BVA-` boundary value, `DT-R` decision-table rule, `ST-T`/`ST-I` valid and invalid state transition, `AC-` criterion from the design, `EG-` error guess).
 
-Mutation check (breaks 47 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
+Mutation check (breaks 58 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
 
 ```sh
 python3 spec/mutate.py docs/test-report/mutants.json
