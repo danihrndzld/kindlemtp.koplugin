@@ -75,10 +75,18 @@ describe("main.lua", function()
     end)
 
     it("DT-R68 NotCharging while waiting for the host after an unplug stops", function()
-        local k, _, fm = start()
-        k.charging = false
+        local k, e, fm = start()
+        e.is_charging = false
         fm:onNotCharging()
         assert.are.equal("idle", k.core.state)
+    end)
+
+    it("DT-R69 NotCharging while waiting with a Full battery and the cable in keeps the start", function()
+        local k, e, fm = start()
+        e.is_charging = false
+        e.online = "1\n"
+        fm:onNotCharging()
+        assert.are.equal("waiting_host", k.core.state)
     end)
 
     it("DT-R62 CloseWidget stops without refreshing the closing browser", function()

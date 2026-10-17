@@ -47,6 +47,9 @@ function F.new()
         udc = "",
         udc_state = "not attached",
         is_charging = true,
+        online = "", -- cat /sys/class/power_supply/*/online
+        sync_seconds = 0,
+        stop_ignored = false, -- responder keeps isMtpStarted 1 after stopMtp
         t = 0,
         wall = 1792000000, -- device clock (epoch seconds), later than every fixture marker
         signal_ok = true,
@@ -104,6 +107,16 @@ function F.new()
         if cmd == "cat /sys/class/udc/*/state 2>/dev/null" then
             return e.udc_state .. "\n", true
         end
+        if cmd:find("/sys/class/power_supply/*/online", 1, true) then
+            return e.udc_state .. "\n@@\n" .. e.online, true
+        end
+        if cmd == "sync" then
+            e.t = e.t + e.sync_seconds
+            return "", true
+        end
+        if cmd == "rm -rf " .. Mtp.MTP_TMP then
+            return "", true
+        end
         error("unexpected command: " .. cmd)
     end
 
@@ -114,7 +127,7 @@ function F.new()
                 if not e.start_ok then return false end
                 e.props["com.lab126.mtp isMtpStarted"] = 1
             elseif prop == "stopMtp" then
-                e.props["com.lab126.mtp isMtpStarted"] = 0
+                if not e.stop_ignored then e.props["com.lab126.mtp isMtpStarted"] = 0 end
             else
                 e.props[pub .. " " .. prop] = v
             end

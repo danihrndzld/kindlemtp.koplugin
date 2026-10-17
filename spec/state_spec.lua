@@ -9,9 +9,12 @@ local SIGNAL = "/usr/bin/dbus-send --system --dest=com.lab126.mtp --type=signal 
 local STOP = {
     "set com.lab126.mtp stopMtp 1",
     "sh /usr/bin/mtp.sh udc disable",
+    "sh sync",
     "set com.lab126.powerd preventScreenSaver 0",
     "remove /tmp/kindlemtp.active",
+    "sh rm -rf /mnt/base-us/.mtp-tmp",
 }
+local CABLE = "sh cat /sys/class/udc/*/state 2>/dev/null; echo @@; cat /sys/class/power_supply/*/online 2>/dev/null"
 
 -- State the core was in at the last call matching `text`.
 local function state_at(e, text)
@@ -159,7 +162,15 @@ describe("start", function()
         local core, e = F.core(function(e) e.is_charging = false end)
         assert.are.same({ nil, "no_power" }, { core:start() })
         assert.are.equal("idle", core.state)
-        assert.are.same({}, e.actions())
+        assert.are.same({ CABLE }, e.actions()) -- only the read-only cable probe
+    end)
+
+    it("DT-R75 Full battery (not charging) with a power supply online still starts", function()
+        local core = F.core(function(e)
+            e.is_charging = false
+            e.online = "1\n"
+        end)
+        assert.is_true(core:start())
     end)
 
     it("DT-R55 stale plugin marker from a crash: stop restores preventScreenSaver to 0", function()
@@ -195,7 +206,7 @@ describe("start", function()
     it("AC-08 keep-awake: a user value of 1 is saved and restored", function()
         local core, e = F.waiting(function(e) e.props["com.lab126.powerd preventScreenSaver"] = 1 end)
         core:stop()
-        assert.are.equal("set com.lab126.powerd preventScreenSaver 1", e.actions()[#e.actions() - 1])
+        assert.are.equal("set com.lab126.powerd preventScreenSaver 1", e.actions()[#e.actions() - 2])
         assert.are.equal(1, e.props["com.lab126.powerd preventScreenSaver"])
     end)
 
@@ -427,7 +438,7 @@ describe("timeout boundaries", function()
         assert.are.equal(reads, e.count("isMtpStarted"))
         e.t = 1.5
         assert.are.equal("dropped", core:poll())
-        assert.are.equal(reads + 1, e.count("isMtpStarted"))
+        assert.are.equal(reads + 2, e.count("isMtpStarted")) -- the poll, then stop's cleanup check
     end)
 
     it("BVA-01 at 19.75 s the plugin still waits", function()
@@ -509,6 +520,39 @@ describe("stop and reset", function()
         assert.are.same(STOP, e.actions(from))
     end)
 
+    it("AC-21 stop runs sync after udc disable and logs how long it took", function()
+        local core, e = F.connected(function(e) e.sync_seconds = 2.5 end)
+        local from = #e.calls + 1
+        core:stop()
+        local a = e.actions(from)
+        assert.are.same({ "sh /usr/bin/mtp.sh udc disable", "sh sync" }, { a[2], a[3] })
+        assert.are.equal("info kindlemtp: sync took 2.50 s", e.logs[#e.logs])
+    end)
+
+    it("AC-22 stop removes /mnt/base-us/.mtp-tmp once the responder reads stopped", function()
+        local core, e = F.connected()
+        core:stop()
+        local a = e.actions()
+        assert.are.equal("sh rm -rf /mnt/base-us/.mtp-tmp", a[#a])
+    end)
+
+    it("DT-R76 responder still started after stopMtp: .mtp-tmp is left alone", function()
+        local core, e = F.connected(function(e) e.stop_ignored = true end)
+        core:stop()
+        assert.are.equal(0, e.count("rm -rf"))
+    end)
+
+    it("DT-R77 a new marker claimed during stop: .mtp-tmp is left alone", function()
+        local core, e = F.connected()
+        local remove = e.remove
+        e.remove = function(path)
+            remove(path)
+            marker(e, "kobridge") -- KOBridge claims right after our marker goes
+        end
+        core:stop()
+        assert.are.equal(0, e.count("rm -rf"))
+    end)
+
     it("ST-T11 failed -> idle on stop", function()
         local core, e = F.waiting(function(e) e.signal_ok = false end)
         host(e)
@@ -524,9 +568,9 @@ describe("stop and reset", function()
         local first = e.actions()
         core:stop()
         local all = e.actions()
-        assert.are.same(first, { all[4], all[5], all[6] })
-        assert.are.same({ "set com.lab126.mtp stopMtp 1", "sh /usr/bin/mtp.sh udc disable",
-            "remove /tmp/kindlemtp.active" }, first)
+        assert.are.same(first, { all[6], all[7], all[8], all[9], all[10] })
+        assert.are.same({ "set com.lab126.mtp stopMtp 1", "sh /usr/bin/mtp.sh udc disable", "sh sync",
+            "remove /tmp/kindlemtp.active", "sh rm -rf /mnt/base-us/.mtp-tmp" }, first)
     end)
 
     it("ST-T17 double stop from waiting_host ends idle with the saved keep-awake", function()
@@ -571,7 +615,7 @@ describe("stop and reset", function()
         assert.is_true(core:reset())
         local a = e.actions(from)
         assert.are.equal("sh restart mtp", a[1])
-        assert.are.same(STOP, { a[2], a[3], a[4], a[5] })
+        assert.are.same(STOP, { a[2], a[3], a[4], a[5], a[6], a[7] })
         assert.are.equal("idle", core.state)
     end)
 

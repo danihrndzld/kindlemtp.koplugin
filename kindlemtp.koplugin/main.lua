@@ -182,7 +182,8 @@ local function stopOn(event)
     local not_charging = event == "NotCharging" and active
     local waiting = core.state == "waiting_host"
     local udc_configured = not_charging and not waiting and core:udc_configured()
-    local charging = not_charging and waiting and Device:getPowerDevice():isCharging()
+    -- Full battery: isCharging reads false with the cable still in, so test the cable itself.
+    local charging = not_charging and waiting and core:cable_in()
     if Mtp.stop_trigger(event, active, udc_configured, waiting, charging) then
         logger.info("kindlemtp: stopping on", event)
         core:stop()

@@ -51,6 +51,33 @@ describe("stop triggers", function()
     end)
 end)
 
+describe("cable detection", function()
+    it("DT-R70 charging means a cable", function()
+        assert.is_true(Mtp.cable_detected(true, "", ""))
+    end)
+
+    it("DT-R71 not charging, UDC configured: a cable", function()
+        assert.is_true(Mtp.cable_detected(false, "configured\n", ""))
+    end)
+
+    it("DT-R72 Full battery: not charging, UDC not attached, a power supply online: a cable", function()
+        assert.is_true(Mtp.cable_detected(false, "not attached\n", "1\n"))
+    end)
+
+    it("DT-R73 not charging, UDC not attached, every supply offline: no cable", function()
+        assert.is_false(Mtp.cable_detected(false, "not attached\n", "0\n0\n"))
+    end)
+
+    it("DT-R74 not charging and no UDC or power-supply files: no cable", function()
+        assert.is_false(Mtp.cable_detected(false, "", ""))
+        assert.is_false(Mtp.cable_detected(false, nil, nil))
+    end)
+
+    it("EP-59 several power supplies, one online", function()
+        assert.is_true(Mtp.cable_detected(false, "not attached", "0\n1\n"))
+    end)
+end)
+
 describe("auto-start", function()
     it("DT-R30 setting on, file manager, idle: starts", function()
         assert.is_true(Mtp.should_autostart(true, true, false))

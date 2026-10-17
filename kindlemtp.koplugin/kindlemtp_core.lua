@@ -26,6 +26,9 @@ M.DBUS_SEND = "/usr/bin/dbus-send"
 M.SYSLOG = "/var/log/messages"
 M.BUS = "com.lab126.mtp" -- lipc publisher and D-Bus name owned by tizen-mtp
 M.POWERD = "com.lab126.powerd"
+M.MTP_TMP = "/mnt/base-us/.mtp-tmp" -- tizen-mtp writes here first, then renames into place
+-- One shell call for the cable test: UDC states, then every power supply's online flag.
+local CABLE_CMD = "cat /sys/class/udc/*/state 2>/dev/null; echo @@; cat /sys/class/power_supply/*/online 2>/dev/null"
 
 -- libmtp-helper logs this at priority 6 when the host configures USB (responder state 2).
 local STATE2 = "handled state_change_event %[12%] event %[2%] current mtp state"
@@ -99,6 +102,20 @@ function M.stop_trigger(event, active, udc_configured, waiting, charging)
         return not udc_configured
     end
     return event == "Suspend" or event == "CloseWidget" or event == "stopPlugin"
+end
+
+--- Is a cable in? Charging alone is not enough: a Full battery stops charging with the cable still in.
+--- Any UDC state other than "not attached", or any power supply reporting online=1, also counts.
+function M.cable_detected(charging, udc_states, online_flags)
+    if charging then return true end
+    for line in (udc_states or ""):gmatch("[^\n]+") do
+        local state = trim(line)
+        if state ~= "" and state ~= "not attached" then return true end
+    end
+    for line in (online_flags or ""):gmatch("[^\n]+") do
+        if trim(line) == "1" then return true end
+    end
+    return false
 end
 
 --- Auto-start decision for the Charging event.
@@ -180,6 +197,12 @@ function M:bus_name()
     return nil
 end
 
+function M:cable_in()
+    if self.env.charging() then return true end
+    local udc, online = self:sh(CABLE_CMD):match("^(.-)@@\n?(.*)$")
+    return M.cable_detected(false, udc, online)
+end
+
 function M:udc_configured()
     for line in self:sh("cat /sys/class/udc/*/state 2>/dev/null"):gmatch("[^\n]+") do
         if trim(line) == "configured" then return true end
@@ -219,7 +242,7 @@ function M:start()
         env.remove(M.MARKER)
         stale_plugin = marker ~= nil and marker.owner == "plugin"
     end
-    if not env.charging() then return nil, "no_power" end
+    if not self:cable_in() then return nil, "no_power" end
 
     self.state, self.error = "starting", nil
     -- The marker is the lock shared with KOBridge: take it before touching the responder.
@@ -327,9 +350,17 @@ function M:stop()
     env.lipc.set_int(M.BUS, "stopMtp", 1)
     -- stopMtp from state 3 does not unbind the UDC.
     self:sh(M.MTP_SH .. " udc disable")
+    -- tizen-mtp never fsyncs; flush just-copied books before the user unplugs or sleeps.
+    local t0 = env.now()
+    self:sh("sync")
+    self:log("info", string.format("sync took %.2f s", env.now() - t0))
     local marker = M.parse_marker(env.read(M.MARKER))
     self:restore_keep_awake(marker ~= nil and marker.owner == "plugin")
     env.remove(M.MARKER)
+    -- Leftovers of an interrupted transfer. Only with the responder stopped and no new marker claimed.
+    if self:started() == 0 and not env.read(M.MARKER) then
+        self:sh("rm -rf " .. M.MTP_TMP)
+    end
     self.state = "idle"
     return true
 end
