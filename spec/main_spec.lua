@@ -84,7 +84,7 @@ describe("main.lua", function()
     it("DT-R69 NotCharging while waiting with a Full battery and the cable in keeps the start", function()
         local k, e, fm = start()
         e.is_charging = false
-        e.online = "1\n"
+        e.supplies = F.fixture("power_supply_ac_online.txt")
         fm:onNotCharging()
         assert.are.equal("waiting_host", k.core.state)
     end)

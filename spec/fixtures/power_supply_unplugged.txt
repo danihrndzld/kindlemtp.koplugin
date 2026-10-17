@@ -1,0 +1,4 @@
+Battery 1
+USB_WET 1
+Mains 0
+Wireless 0

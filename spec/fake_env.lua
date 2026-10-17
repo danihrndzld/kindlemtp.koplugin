@@ -47,7 +47,7 @@ function F.new()
         udc = "",
         udc_state = "not attached",
         is_charging = true,
-        online = "", -- cat /sys/class/power_supply/*/online
+        supplies = F.fixture("power_supply_unplugged.txt"), -- "<type> <online>" per power supply
         sync_seconds = 0,
         stop_ignored = false, -- responder keeps isMtpStarted 1 after stopMtp
         t = 0,
@@ -107,8 +107,8 @@ function F.new()
         if cmd == "cat /sys/class/udc/*/state 2>/dev/null" then
             return e.udc_state .. "\n", true
         end
-        if cmd:find("/sys/class/power_supply/*/online", 1, true) then
-            return e.udc_state .. "\n@@\n" .. e.online, true
+        if cmd == Mtp.CABLE_CMD then
+            return e.udc_state .. "\n@@\n" .. e.supplies, true
         end
         if cmd == "sync" then
             e.t = e.t + e.sync_seconds

@@ -16,4 +16,6 @@ Captured on a Kindle Paperwhite, firmware 5.18.5, unless marked synthetic.
 | `syslog_no_state2.txt` | Lines 9-15 of `syslog_full_run.txt`: up to state 1 |
 | `syslog_debug_on.txt` | Captured 2026-10-15 with `enableDebugLog` on (`mtp-startmtp-log.txt`) |
 | `udc_tape_host.txt` | Captured 2026-10-16 (device-checks.sh host trace). `t` is the loop index x 0.25 s; the loop's `sleep 0.5` failed on BusyBox, so real spacing is shorter |
+| `power_supply_unplugged.txt` | Captured 2026-10-16 with the cable out (isCharging 0, battery Discharging, UDC `not attached`): `type` and `online` of `bd71827_bat` (Battery, 1), `max20342_moisture` (USB_WET, 1), `bd71827_ac` (Mains, 0), `Wireless` (Wireless, 0), one line each as `kindlemtp_core.CABLE_CMD` prints them |
+| `power_supply_ac_online.txt` | **Synthetic**: the capture above with `bd71827_ac` online=1 |
 | `udc_tape_charger.txt` | **Synthetic**: no charger-only capture yet |

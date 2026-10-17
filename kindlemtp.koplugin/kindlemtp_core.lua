@@ -27,8 +27,8 @@ M.SYSLOG = "/var/log/messages"
 M.BUS = "com.lab126.mtp" -- lipc publisher and D-Bus name owned by tizen-mtp
 M.POWERD = "com.lab126.powerd"
 M.MTP_TMP = "/mnt/base-us/.mtp-tmp" -- tizen-mtp writes here first, then renames into place
--- One shell call for the cable test: UDC states, then every power supply's online flag.
-local CABLE_CMD = "cat /sys/class/udc/*/state 2>/dev/null; echo @@; cat /sys/class/power_supply/*/online 2>/dev/null"
+-- One shell call for the cable test: UDC states, then "<type> <online>" for every power supply.
+M.CABLE_CMD = [[cat /sys/class/udc/*/state 2>/dev/null; echo @@; for d in /sys/class/power_supply/*; do echo "$(cat "$d/type" 2>/dev/null) $(cat "$d/online" 2>/dev/null)"; done]]
 
 -- libmtp-helper logs this at priority 6 when the host configures USB (responder state 2).
 local STATE2 = "handled state_change_event %[12%] event %[2%] current mtp state"
@@ -105,15 +105,18 @@ function M.stop_trigger(event, active, udc_configured, waiting, charging)
 end
 
 --- Is a cable in? Charging alone is not enough: a Full battery stops charging with the cable still in.
---- Any UDC state other than "not attached", or any power supply reporting online=1, also counts.
-function M.cable_detected(charging, udc_states, online_flags)
+--- Any UDC state other than "not attached" also counts, and so does an online=1 power supply of type
+--- Mains or USB*. Battery, Wireless and USB_WET (moisture sensor) read online=1 with no cable at all.
+function M.cable_detected(charging, udc_states, supplies)
     if charging then return true end
     for line in (udc_states or ""):gmatch("[^\n]+") do
         local state = trim(line)
         if state ~= "" and state ~= "not attached" then return true end
     end
-    for line in (online_flags or ""):gmatch("[^\n]+") do
-        if trim(line) == "1" then return true end
+    for line in (supplies or ""):gmatch("[^\n]+") do
+        local kind, online = trim(line):match("^(%S+)%s+(%S+)$")
+        local cable_type = kind == "Mains" or (kind ~= nil and kind:find("^USB") ~= nil and kind ~= "USB_WET")
+        if cable_type and online == "1" then return true end
     end
     return false
 end
@@ -199,8 +202,8 @@ end
 
 function M:cable_in()
     if self.env.charging() then return true end
-    local udc, online = self:sh(CABLE_CMD):match("^(.-)@@\n?(.*)$")
-    return M.cable_detected(false, udc, online)
+    local udc, supplies = self:sh(M.CABLE_CMD):match("^(.-)@@\n?(.*)$")
+    return M.cable_detected(false, udc, supplies)
 end
 
 function M:udc_configured()

@@ -1,5 +1,6 @@
 -- Decision tables for main.lua's event handling: which KOReader events stop, and when Charging auto-starts.
 local Mtp = require("kindlemtp_core")
+local F = require("fake_env")
 
 describe("stop triggers", function()
     it("DT-R20 NotCharging while active and UDC not configured stops", function()
@@ -60,12 +61,20 @@ describe("cable detection", function()
         assert.is_true(Mtp.cable_detected(false, "configured\n", ""))
     end)
 
-    it("DT-R72 Full battery: not charging, UDC not attached, a power supply online: a cable", function()
-        assert.is_true(Mtp.cable_detected(false, "not attached\n", "1\n"))
+    it("DT-R72 Full battery: not charging, UDC not attached, bd71827_ac (Mains) online: a cable", function()
+        assert.is_true(Mtp.cable_detected(false, "not attached\n", F.fixture("power_supply_ac_online.txt")))
     end)
 
-    it("DT-R73 not charging, UDC not attached, every supply offline: no cable", function()
-        assert.is_false(Mtp.cable_detected(false, "not attached\n", "0\n0\n"))
+    it("DT-R73 captured with the cable out: Battery and USB_WET online, Mains and Wireless off: no cable", function()
+        assert.is_false(Mtp.cable_detected(false, "not attached\n", F.fixture("power_supply_unplugged.txt")))
+    end)
+
+    it("DT-R78 a USB-type supply online is a cable", function()
+        assert.is_true(Mtp.cable_detected(false, "not attached", "USB 1\nBattery 1\n"))
+    end)
+
+    it("DT-R79 Battery, Wireless and USB_WET online alone are no cable", function()
+        assert.is_false(Mtp.cable_detected(false, "not attached", "Battery 1\nWireless 1\nUSB_WET 1\n"))
     end)
 
     it("DT-R74 not charging and no UDC or power-supply files: no cable", function()
@@ -73,8 +82,8 @@ describe("cable detection", function()
         assert.is_false(Mtp.cable_detected(false, nil, nil))
     end)
 
-    it("EP-59 several power supplies, one online", function()
-        assert.is_true(Mtp.cable_detected(false, "not attached", "0\n1\n"))
+    it("EP-59 a supply line with a missing online value is ignored", function()
+        assert.is_false(Mtp.cable_detected(false, "not attached", "Mains \nUSB\n"))
     end)
 end)
 

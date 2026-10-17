@@ -14,7 +14,7 @@ local STOP = {
     "remove /tmp/kindlemtp.active",
     "sh rm -rf /mnt/base-us/.mtp-tmp",
 }
-local CABLE = "sh cat /sys/class/udc/*/state 2>/dev/null; echo @@; cat /sys/class/power_supply/*/online 2>/dev/null"
+local CABLE = "sh " .. Mtp.CABLE_CMD
 
 -- State the core was in at the last call matching `text`.
 local function state_at(e, text)
@@ -168,7 +168,7 @@ describe("start", function()
     it("DT-R75 Full battery (not charging) with a power supply online still starts", function()
         local core = F.core(function(e)
             e.is_charging = false
-            e.online = "1\n"
+            e.supplies = F.fixture("power_supply_ac_online.txt")
         end)
         assert.is_true(core:start())
     end)
