@@ -2,7 +2,7 @@
 
 A KOReader plugin that lets a computer browse and copy the Kindle's files over the USB cable (MTP) while KOReader is running. You no longer have to exit KOReader and go back to the stock Kindle interface to copy books.
 
-It is for Kindles that talk MTP over USB, which is every Kindle on firmware 5.16 or later. Older Kindles show up as a USB drive and do not need it.
+It is for Kindles that talk MTP over USB on firmware 5.16 to 5.18.x. Firmware 5.19 is not supported yet (see [Supported devices](#supported-devices)). Older Kindles show up as a USB drive and do not need it.
 
 ## Contents
 
@@ -40,7 +40,8 @@ It also:
 | Device | Status |
 |---|---|
 | Kindle Paperwhite, firmware 5.18.5 (kernel 5.15.41-lab126) | The command sequence was verified by hand on 2026-10-15, and the same sequence passed a live USB test from KOBridge on 2026-10-16 (responder states 4 → 1 → 2 → 3 → 4, Wi-Fi up, marker and keep-awake restored). The test fixtures are captures from this device. The plugin itself still has to pass the [device checklist](#device-checklist-for-testers) |
-| Other Kindles on firmware 5.16 or later that have `/usr/bin/mtp.sh` | Expected to work, not tested yet |
+| Other Kindles on firmware 5.16 to 5.18.x that have `/usr/bin/mtp.sh` | Expected to work, not tested yet |
+| Kindles on firmware 5.19.x (reported: Scribe 5.19.5, Colorsoft 5.19.5) | Not supported yet. 5.19 moved MTP control from lipc to a new interface, so the About check "lipc answers" fails and Start says the responder does not answer over lipc. Use the stock interface for transfers until support lands |
 | Kindles on firmware older than 5.16 | Not needed: they use USB mass storage, which works without this plugin |
 | Kobo, PocketBook, Android and other KOReader platforms | Not supported; the plugin disables itself |
 
