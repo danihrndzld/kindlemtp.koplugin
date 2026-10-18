@@ -19,6 +19,9 @@ M.STALE_AFTER = 30
 -- A lipc property read can block for liblipc's 10 s timeout when the responder hangs,
 -- so poll() reads isMtpStarted at most this often (seconds).
 M.LIPC_INTERVAL = 1
+-- On 5.19 started() is the UDC binding, and the responder rebinds it (state 2 -> 3) through a bash
+-- exec after it gets the drive-mode signal. An unbound UDC this soon after connecting is no dropout.
+M.REBIND_GRACE = 3
 M.MARKER = "/tmp/kindlemtp.active"
 M.MTP_SH = "/usr/bin/mtp.sh"
 M.GADGET = "/sys/kernel/config/usb_gadget/mtpgadget"
@@ -142,8 +145,40 @@ function M:sh(cmd)
     return out or "", ok
 end
 
+--- How to command the responder: "lipc" (5.16 to 5.18) or "ipcf" (5.19 on, where tizen-mtp registers
+--- no lipc properties and takes startMtpAsync/stopMtpAsync over IPCF4 through bin/kindlemtp-ipcf).
+--- The helper's ping answers fast on both: "no_ipcn" when libipcn is missing (5.18), "ok" on 5.19.
+--- Both answers are cached; a failed ping is not, so the next call asks again.
+function M:control()
+    if not self.mode then
+        if not self.env.ipcf then
+            self.mode = "lipc"
+        else
+            local out, ok = self:sh(sq(self.env.ipcf) .. " ping")
+            if ok then self.mode = "ipcf"
+            elseif out:find("no_ipcn", 1, true) then self.mode = "lipc"
+            end
+        end
+    end
+    return self.mode or "lipc"
+end
+
+--- 1 when the responder runs MTP, 0 when not, nil when it can't be asked. On 5.19 nothing reports
+--- the responder state, so the gadget's UDC binding stands in for it (bound in states 1 and 3).
 function M:started()
+    if self:control() == "ipcf" then
+        return trim(self.env.read(M.GADGET .. "/UDC")) ~= "" and 1 or 0
+    end
     return self.env.lipc.get_int(M.BUS, "isMtpStarted")
+end
+
+--- startMtp/stopMtp 1 over lipc, or the IPCF4 calls that set the same flag and send the same events.
+function M:mtp(what)
+    if self:control() == "ipcf" then
+        local _, ok = self:sh(sq(self.env.ipcf) .. " " .. what)
+        return ok
+    end
+    return self.env.lipc.set_int(M.BUS, what .. "Mtp", 1)
 end
 
 function M:active()
@@ -267,9 +302,9 @@ function M:start()
     if not self.dest then return self:fail("bus_name_not_found") end
     -- Reset, as in the recipe: leaves the responder in state 4.
     self:sh(M.MTP_SH .. " udc disable")
-    env.lipc.set_int(M.BUS, "stopMtp", 1)
+    self:mtp("stop")
     self.baseline = tonumber(trim(self:sh("wc -l < " .. M.SYSLOG)))
-    if not env.lipc.set_int(M.BUS, "startMtp", 1) then return self:fail("startmtp_failed") end
+    if not self:mtp("start") then return self:fail("startmtp_failed") end
     self.saved_pss = stale_plugin and 0 or (env.lipc.get_int(M.POWERD, "preventScreenSaver") or 0)
     env.lipc.set_int(M.POWERD, "preventScreenSaver", 1)
 
@@ -320,7 +355,10 @@ function M:poll()
         self.lipc_at, self.last_started = now, self:started()
     end
     local started = self.last_started
-    if started == 0 then
+    -- On 5.19 started is the UDC binding, which drops while the host configures (state 2) and
+    -- comes back a moment after the drive-mode signal.
+    local rebound = self.state == "connected" and now - self.connected_at >= M.REBIND_GRACE
+    if started == 0 and (self.mode ~= "ipcf" or rebound) then
         self:log("warn", "responder dropped out (isMtpStarted 0)")
         self:stop()
         return "dropped"
@@ -334,7 +372,7 @@ function M:poll()
             local _, reason = self:fail("signal_failed")
             return "failed", reason
         end
-        self.state = "connected"
+        self.state, self.connected_at = "connected", now
         self:log("info", "host configured USB, drive mode sent")
         return "connected"
     end
@@ -350,7 +388,7 @@ end
 function M:stop()
     local env = self.env
     self.state = "stopping"
-    env.lipc.set_int(M.BUS, "stopMtp", 1)
+    self:mtp("stop")
     -- stopMtp from state 3 does not unbind the UDC.
     self:sh(M.MTP_SH .. " udc disable")
     -- tizen-mtp never fsyncs; flush just-copied books before the user unplugs or sleeps.
@@ -379,10 +417,11 @@ end
 ---------------------------------------------------------------- production env
 
 --- Env backed by io.popen, io/lfs and liblipclua (lipc-set-prop/lipc-get-prop when it is missing).
---- `o` may set charging, now, log and, for tests, liblipc (a liblipclua stand-in, or false for none).
+--- `o` may set charging, now, log, ipcf and, for tests, liblipc (a liblipclua stand-in, or false for none).
 function M.posix_env(o)
     o = o or {}
     local env = {
+        ipcf = o.ipcf, -- path of bin/kindlemtp-ipcf, for firmware 5.19 on
         getenv = os.getenv,
         now = o.now or os.time,
         epoch = os.time, -- device wall clock, for the marker's since=

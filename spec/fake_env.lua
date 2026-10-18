@@ -58,6 +58,8 @@ function F.new()
         restart_ok = true,
         wc_ok = true,
         lipc_dead = false,
+        ipcf = nil, -- helper path; nil = no helper (lipc only)
+        ipcf_answer = "ok", -- "ok", "no_ipcn" (5.18) or "fail"
     }
 
     local function rec(kind, text)
@@ -101,6 +103,19 @@ function F.new()
             local log = #new > 0 and (table.concat(new, "\n") .. "\n") or ""
             return e.udc .. "\n@@\n" .. #e.syslog .. "\n@@\n" .. log, #new > 0
         end
+        local ipcf = e.ipcf and cmd:match("^'" .. e.ipcf:gsub("%p", "%%%0") .. "' (%a+)$")
+        if ipcf then
+            -- firmware 5.19: "ok" with the service up; 5.18: no libipcn, prints no_ipcn and exits 2
+            if e.ipcf_answer == "no_ipcn" then return "no_ipcn\n", false end
+            if e.ipcf_answer ~= "ok" then return "", false end
+            if ipcf == "start" then
+                if not e.start_ok then return "", false end
+                e.udc = "musb-hdrc.1.auto"
+            elseif ipcf == "stop" and not e.stop_ignored then
+                e.udc = ""
+            end
+            return "ok\n", true
+        end
         if cmd == "restart mtp" then
             return "mtp start/running, process 6001\n", e.restart_ok
         end
@@ -142,6 +157,7 @@ function F.new()
 
     function e.read(path)
         rec("read", path)
+        if path == Mtp.GADGET .. "/UDC" then return e.udc .. "\n" end
         return e.contents[path]
     end
 

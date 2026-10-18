@@ -143,6 +143,32 @@ The responder goes 1 → 2 within one second (19:37:43 in `mtp-startmtp-log.txt`
 
 Use `pcall(require, "liblipclua")` with `lipc.init("com.github.koreader.kindlemtp")`, as `kindleEnableWifi` does in `frontend/device/kindle/device.lua`. Fall back to `lipc-set-prop -i` / `lipc-get-prop -eiq` through `sh`.
 
+## Firmware 5.19 (2026-10-18)
+
+A Colorsoft and a Scribe on 5.19.5 failed the lipc check. tizen-mtp still opens lipc as `com.lab126.mtp`, but it registers no properties (`lipc:nop::No properties registered`), so `startMtp`, `stopMtp` and `isMtpStarted` are gone. Sources: the tester's `collect-519.sh` tar and Amazon's public update file `update_kindle_colorsoft_5.19.5.bin` (unpacked with KindleTool, rootfs read with debugfs). Both are kept outside the repo in `~/Developer/kindlemtp-519-re/`.
+
+What changed and what did not, from libmtp-helper.so, libipcf4.so, libipcn.so.0.1.0 and volumd:
+
+- libmtp-helper now serves an IPCF4 service, `com.lab126.mtp.service`. Code 0x65 is `startMtpAsync(int)`: it sets `is_usb_pluggedin` to 1 and posts event 11, exactly what lipc `startMtp 1` did. Code 0x66 is `stopMtpAsync(int)`: flag 0 and event 15. Code 0x67 is `shutdownMtpAsync(string)`. Code 0x68, `getMtpInitializationStatus`, always returns 0, so nothing reports the responder state any more.
+- The rest of the recipe is unchanged. The state machine (`handle_state_change_event`), the syslog line `handled state_change_event [12] event [2] current mtp state`, the D-Bus name `com.lab126.mtp`, and the lipc subscription to `com.lab126.volumd driveModeStateChanged` (value 1 posts event 14) are all still there.
+- Stock volumd starts MTP through `MtpHelperServiceProxy::startMtpAsync`. KOReader keeps volumd stopped, so nobody calls it.
+- No shipped tool can make the call: `ipcf-cli-tools` knows btfd, wifid, powerd and volumd only, and `libipcf-thin-clients` has no MTP client. LuaJIT FFI is out too: libipcn delivers callbacks on its run-loop thread, and a LuaJIT callback can't run on a foreign thread.
+
+So the plugin ships a small C helper, `bin/kindlemtp-ipcf` (`ipcf/kindlemtp-ipcf.c`, built by `tools/build-ipcf.sh` with zig for armhf, glibc 2.20 or later). It loads `libipcn.so.0` with dlopen and does what `IpcnProxy::connect` does:
+
+1. `ipcn_create(&rt, 0, 4, 0x4000)` (libmtp-helper's values) and a thread for `ipcn_run_loop`.
+2. `ipcn_service_bind(rt, "com.lab126.mtp.service", cb, ctx)`. In libipcn 0.1.0 this asks the service manager and calls `cb(rt, ctx, name, handle)` before it returns; 9 means no such service.
+3. The session handshake: a sync `ipcn_call` with code 0xffff whose payload is our own endpoint (`ipcn_write_endpoint`, a struct whose first word points at four callbacks). The reply holds a u16 session id and the session endpoint. `IpcnSkeleton::onServiceCallOneway` drops calls from clients without a session ("Client already disconnected").
+4. `ipcn_call_oneway(rt, &session, 0x65 or 0x66, payload)` with one i32 (1). The helper then waits 0.5 s, because the service drops a oneway call whose session has died. It does not send the stock disconnect (sync code 0xfffe on the session), which could overtake the oneway call.
+
+The session handle is acquired before `ipcn_reply_done`, since `ipcn_read_endpoint` takes no reference and freeing the reply drops the one that delivered it. `alarm(10)` caps every run, because the plugin calls the helper on KOReader's UI thread, and the helper leaves with `_exit` while libipcn's loop thread is still running.
+
+Firmware 5.20.1 (the Colorsoft update of 2026-10-06) moved the skeleton and proxy into `libMtpHelperServiceSkeleton.so` and `libMtpHelperServiceProxy.so`. The service name, codes 0x65 to 0x68, the i32 payload, events 11 and 15 and libipcn's API are unchanged.
+
+`ping` does steps 1 to 3 only. Without libipcn (5.18 and earlier) it prints `no_ipcn` and exits 2, so `control()` picks lipc there and caches the answer. A failed ping is not cached. The helper ran under qemu-arm against the real 5.19.5 libraries: every symbol resolves, and it stops at `ipcn_create` only because the container has no `/dev/binder`. It has not run on a 5.19 Kindle yet.
+
+With no state to read, `started()` on 5.19 is the gadget's UDC binding: bound in states 1 and 3. It drops while the host configures (state 2), and the responder rebinds it only after it gets the drive-mode signal and runs `mtp.sh` through bash. So `poll()` takes an unbound UDC for a dropout only in `connected` and only `REBIND_GRACE` (3 s) after connecting, and KOBridge's connect waits up to 3 s for the rebind before it reports. The stale-marker rule and the `.mtp-tmp` cleanup read the same value. The host-detection fallback (UDC empty plus `isMtpStarted` 1) can't fire there, so the syslog line is the only host signal.
+
 ## Safety
 
 - Refuse to start with a book open: ReaderUI rewrites the sidecar on every flush and would overwrite edits made from the computer.

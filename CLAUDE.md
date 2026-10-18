@@ -11,6 +11,7 @@ busted                              # all specs
 busted spec/state_spec.lua          # one file
 luacheck kindlemtp.koplugin spec    # must stay at 0 warnings
 python3 spec/mutate.py              # mutation check: exits 1 if any mutant survives
+tools/build-ipcf.sh                 # rebuilds bin/kindlemtp-ipcf (needs zig); commit the binary
 ```
 
 Install on the Kindle for a manual test (KOReader must be restarted to load it):
@@ -20,6 +21,7 @@ Install on the Kindle for a manual test (KOReader must be restarted to load it):
 
 - `kindlemtp.koplugin/kindlemtp_core.lua`: everything KOReader-free: probe, marker, bus name, host detection, state machine, decision helpers (`stop_trigger`, `should_autostart`, `marker_stale`), plus the production `posix_env`. It takes an injected `env`, so it runs under plain LuaJIT.
 - `kindlemtp.koplugin/main.lua`: thin `WidgetContainer`: menu, dialog, events, `UIManager:scheduleIn` polling. Never block the UI thread and never shell out to `sleep`.
+- `ipcf/kindlemtp-ipcf.c` → `kindlemtp.koplugin/bin/kindlemtp-ipcf`: the firmware 5.19+ helper (`ping|start|stop`) that calls tizen-mtp's IPCF4 service `com.lab126.mtp.service`, where the lipc properties are gone. It dlopens `libipcn.so.0` and prints `no_ipcn` without it, so the plugin falls back to lipc. Signatures and the session handshake are in `docs/design.md` under "Firmware 5.19"; firmware images and unpacked rootfs (5.19.5, 5.20.1) are in `~/Developer/kindlemtp-519-re/`, outside git. Check a new build with qemu: `podman run --rm -v <rootfs>:/kroot:ro -v $PWD/kindlemtp.koplugin/bin:/kbin:ro kmtp-qemu qemu-arm -L /kroot /kbin/kindlemtp-ipcf ping` (stops at `ipcn_create -1` without `/dev/binder`, which means every symbol resolved).
 - `spec/`: busted specs; `fake_env.lua` records every command and errors on unexpected ones; `koreader_stubs.lua` preloads KOReader modules for `main_spec.lua`; `fixtures/` (its README marks which are captured from the device and which are synthetic).
 - `docs/test-report/`: report generated with the `testing-and-continuous-delivery` skill (Spanish). Regenerate it when test or mutant counts change.
 
@@ -27,7 +29,7 @@ The core file is named `kindlemtp_core.lua`, not `mtp.lua`: KOReader puts every 
 
 ## Rules
 
-- **The recipe is shared with KOBridge.** `~/Developer/KOBridge/src-tauri/src/usb.rs` duplicates it and copies the fixtures. Any change to the order, marker contract, stale rule or host detection goes to both repos in the same session.
+- **The recipe is shared with KOBridge.** `~/Developer/KOBridge/src-tauri/src/usb.rs` duplicates it and copies the fixtures and `bin/kindlemtp-ipcf` (to `src-tauri/resources/`). Any change to the order, marker contract, stale rule or host detection goes to both repos in the same session.
 - **Claim the marker first.** `/tmp/kindlemtp.active` is the lock: claim it with an exclusive write before touching the responder. A lost claim sends no device command. Any failure after the claim tears down and removes our marker.
 - **Never broadcast the drive-mode signal.** Always `--dest=com.lab126.mtp`; a broadcast turns Wi-Fi off and draws the stock USB screen.
 - **lipc reads can block 10 s** against a wedged responder: at most one `isMtpStarted` read per second, and none at plugin load.
@@ -42,4 +44,4 @@ CI (`test.yml`) installs busted and luacheck with luarocks on PUC Lua 5.1 and ru
 
 ## Verified so far
 
-Only a Kindle Paperwhite on firmware 5.18.5 (2026-10-16): start from the menu, a host lists files, a copied book opens. Not yet run on a device: wall-charger auto-start, sleep cover, exiting mid-transfer, Reset recovery. Device facts and their sources are in `docs/design.md` under "Device facts".
+Only a Kindle Paperwhite on firmware 5.18.5 (2026-10-16): start from the menu, a host lists files, a copied book opens. The 5.19+ IPCF4 path (v1.1.0) is built from the firmware's libraries and checked under qemu, but has not run on a 5.19 Kindle. Not yet run on a device: wall-charger auto-start, sleep cover, exiting mid-transfer, Reset recovery. Device facts and their sources are in `docs/design.md` under "Device facts".

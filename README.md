@@ -2,7 +2,7 @@
 
 A KOReader plugin that lets a computer browse and copy the Kindle's files over the USB cable (MTP) while KOReader is running. You no longer have to exit KOReader and go back to the stock Kindle interface to copy books.
 
-It is for Kindles that talk MTP over USB on firmware 5.16 to 5.18.x. Firmware 5.19 is not supported yet (see [Supported devices](#supported-devices)). Older Kindles show up as a USB drive and do not need it.
+It is for Kindles that talk MTP over USB, firmware 5.16 or later. Support for firmware 5.19 and 5.20 is new and has not been confirmed on a device yet (see [Supported devices](#supported-devices)). Older Kindles show up as a USB drive and do not need it.
 
 ## Contents
 
@@ -41,7 +41,7 @@ It also:
 |---|---|
 | Kindle Paperwhite, firmware 5.18.5 (kernel 5.15.41-lab126) | The command sequence was verified by hand on 2026-10-15, and the same sequence passed a live USB test from KOBridge on 2026-10-16 (responder states 4 → 1 → 2 → 3 → 4, Wi-Fi up, marker and keep-awake restored). The test fixtures are captures from this device. The plugin itself still has to pass the [device checklist](#device-checklist-for-testers) |
 | Other Kindles on firmware 5.16 to 5.18.x that have `/usr/bin/mtp.sh` | Expected to work, not tested yet |
-| Kindles on firmware 5.19.x (reported: Scribe 5.19.5, Colorsoft 5.19.5) | Not supported yet. 5.19 moved MTP control from lipc to a new interface, so the About check "lipc answers" fails and Start says the responder does not answer over lipc. Use the stock interface for transfers until support lands |
+| Kindles on firmware 5.19.x and 5.20.x (reported: Scribe 5.19.5, Colorsoft 5.19.5) | Untested. 5.19 moved MTP control from lipc to an IPCF4 service, `com.lab126.mtp.service`. Since v1.1.0 the plugin calls that service through a small helper, `bin/kindlemtp-ipcf`, built from the firmware's own libraries (5.19.5 and 5.20.1 checked). The About check "Responder answers (lipc or IPCF4)" shows whether the helper reaches the service. Please report the result |
 | Kindles on firmware older than 5.16 | Not needed: they use USB mass storage, which works without this plugin |
 | Kobo, PocketBook, Android and other KOReader platforms | Not supported; the plugin disables itself |
 
@@ -180,7 +180,8 @@ Details that matter:
 - **Detecting the computer.** The responder goes from state 1 to state 2 in under a second. The plugin records the line count of `/var/log/messages` before Start and then, every 250 ms, looks for a new `mtp-responder` line containing `handled state_change_event [12] event [2] current mtp state`. As a second signal it also watches the gadget's `UDC` file go from bound to empty. It reads `isMtpStarted` at most once per second, because a lipc read can block for up to 10 seconds when the responder hangs.
 - **Stopping needs both commands.** `stopMtp` from state 3 does not unbind the USB gadget, so the plugin also runs `mtp.sh udc disable`.
 - **The marker file** `/tmp/kindlemtp.active` holds one line, `owner=plugin pid=<N> since=<epoch>`, created atomically with the shell's noclobber option. The KOBridge desktop app uses the same file, so the two never run a transfer at the same time. The marker is the lock, so Start takes it before sending anything to the responder: if KOBridge got there first, Start backs off without touching its session. A marker is only treated as a leftover, and removed by the other side, when `lipc-get-prop com.lab126.mtp isMtpStarted` reads 0 and its `since` (the Kindle's own clock) is at least 30 seconds old. A marker with an unreadable or future `since` is never removed that way; Stop and Reset still clear it.
-- **Before Start** the plugin runs 7 checks: the device is a Kindle; `/usr/bin/mtp.sh` exists; `/sys/kernel/config/usb_gadget/mtpgadget` exists; `tizen-mtp` is running; `/usr/bin/dbus-send` exists; `com.lab126.mtp` answers over lipc; and `volumd` is paused (`VOLUMD_STOPPED=yes` from the launcher, or state `T` in `/proc/<pid>/stat`).
+- **Firmware 5.19 and later** dropped the lipc properties `startMtp`, `stopMtp` and `isMtpStarted`. The responder now takes `startMtpAsync` and `stopMtpAsync` from an IPCF4 (binder) service, `com.lab126.mtp.service`, and they set the same flag and send the same events as the old properties. No shell tool can call it, so the plugin ships `bin/kindlemtp-ipcf`, a small C program (`ipcf/kindlemtp-ipcf.c`) that loads the firmware's `libipcn.so.0` and makes those two calls. Its `ping` command only connects. On older firmware there is no `libipcn`, the helper prints `no_ipcn`, and the plugin uses lipc. Nothing reports the responder state on 5.19, so there the gadget's `UDC` file being bound stands in for `isMtpStarted`. Every other step is the same. The reverse engineering is in [docs/design.md](docs/design.md#firmware-519-2026-10-18).
+- **Before Start** the plugin runs 7 checks: the device is a Kindle; `/usr/bin/mtp.sh` exists; `/sys/kernel/config/usb_gadget/mtpgadget` exists; `tizen-mtp` is running; `/usr/bin/dbus-send` exists; the responder answers over lipc or IPCF4; and `volumd` is paused (`VOLUMD_STOPPED=yes` from the launcher, or state `T` in `/proc/<pid>/stat`).
 
 All of this is in `kindlemtp.koplugin/kindlemtp_core.lua`, which does not depend on KOReader. `main.lua` holds the menu, the dialog and the event handling. The full design is in [docs/design.md](docs/design.md).
 
@@ -236,7 +237,7 @@ luacheck kindlemtp.koplugin spec
 
 Every test name starts with a test-design ID (`EP-` equivalence partition, `BVA-` boundary value, `DT-R` decision-table rule, `ST-T`/`ST-I` valid and invalid state transition, `AC-` criterion from the design, `EG-` error guess).
 
-Mutation check (breaks 58 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
+Mutation check (breaks 63 key behaviors in `kindlemtp_core.lua` and `main.lua` one at a time and fails if any change goes unnoticed; the file is restored after each run):
 
 ```sh
 python3 spec/mutate.py docs/test-report/mutants.json

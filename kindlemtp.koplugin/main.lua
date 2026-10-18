@@ -38,7 +38,12 @@ local function ownPid()
     return pid or 0
 end
 
+-- Firmware 5.19 on: the IPCF4 helper next to this file. Zip installs may drop the exec bit.
+local IPCF = (debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$") or ".") .. "/bin/kindlemtp-ipcf"
+os.execute("chmod +x '" .. IPCF .. "' 2>/dev/null")
+
 local core = Mtp.new(Mtp.posix_env{
+    ipcf = IPCF,
     charging = function() return Device:getPowerDevice():isCharging() end,
     now = function() return time.to_number(UIManager:getElapsedTimeSinceBoot()) end,
     log = function(level, msg) logger[level](msg) end,
@@ -50,7 +55,7 @@ local REASONS = {
     no_gadget = _("The MTP USB gadget (/sys/kernel/config/usb_gadget/mtpgadget) is missing."),
     no_responder = _("The MTP responder (tizen-mtp) is not running. Try \"Reset the USB responder\"."),
     no_dbus_send = _("/usr/bin/dbus-send is missing."),
-    no_lipc = _("The MTP responder does not answer over lipc (com.lab126.mtp isMtpStarted)."),
+    no_lipc = _("The MTP responder does not answer, neither over lipc (com.lab126.mtp) nor over IPCF4 (com.lab126.mtp.service)."),
     volumd_running = _("volumd is running, so the Kindle already handles USB itself. Launch KOReader from KUAL to use this plugin."),
     book_open = _("Close the book first. KOReader rewrites the book's settings while it is open."),
     no_power = _("Connect the USB cable to the computer first."),
@@ -70,7 +75,7 @@ local CHECK_LABELS = {
     no_gadget = _("MTP USB gadget"),
     no_responder = _("tizen-mtp running"),
     no_dbus_send = _("/usr/bin/dbus-send"),
-    no_lipc = _("lipc answers"),
+    no_lipc = _("Responder answers (lipc or IPCF4)"),
     volumd_running = _("volumd stopped"),
 }
 
