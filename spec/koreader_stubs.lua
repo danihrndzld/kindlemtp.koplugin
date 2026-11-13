@@ -7,7 +7,7 @@ local S = {}
 local STUBBED = {
     "device", "ui/widget/buttondialog", "ui/widget/confirmbox", "ui/widget/infomessage",
     "ui/widget/container/widgetcontainer", "pluginshare", "ui/uimanager", "logger", "ui/time",
-    "gettext", "apps/filemanager/filemanager", "kindlemtp_core",
+    "gettext", "apps/filemanager/filemanager", "apps/reader/readerui", "kindlemtp_core",
 }
 
 local function widget(k, class)
@@ -27,7 +27,8 @@ end
 --- opts: kindle (default true), autostart, keepalive (PluginShare.keepalive before start), setup(e).
 function S.load(opts)
     opts = opts or {}
-    local k = { log = {}, scheduled = {}, settings = { kindlemtp_autostart = opts.autostart }, charging = true }
+    local k = { log = {}, scheduled = {}, charging = true,
+        settings = { kindlemtp_autostart = opts.autostart, kindlemtp_show_dialog = opts.show_dialog } }
     local e = F.new()
     if opts.setup then opts.setup(e) end
     k.share = { keepalive = opts.keepalive }
@@ -62,6 +63,8 @@ function S.load(opts)
     package.preload["gettext"] = function() return function(s) return s end end
     k.FileManager = { instance = k.fm }
     package.preload["apps/filemanager/filemanager"] = function() return k.FileManager end
+    k.ReaderUI = {}
+    package.preload["apps/reader/readerui"] = function() return k.ReaderUI end
     package.preload["ui/uimanager"] = function()
         return {
             show = function(_, w)

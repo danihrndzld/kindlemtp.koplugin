@@ -86,24 +86,29 @@ The plugin lives in the Network menu, next to the SSH server.
 1. Go to the file browser. If a book is open, close it.
 2. Plug the Kindle into the computer.
 3. Open the top menu, go to the Network tab, then **USB file transfer (MTP)** → **Start USB file transfer**.
-4. A dialog shows "Waiting for the computer…". Within a second or two it changes to "Connected. Your computer can see the Kindle's files."
+4. Nothing appears on screen: the transfer runs in the background. Within a second or two the computer sees the Kindle's files. (Turn on **Show transfer dialog** below to get a status box with a **Stop transfer** button.)
 5. Copy files with the computer. Books go in the `documents` folder as usual.
-6. Tap **Stop transfer** when you are done. The file browser refreshes and shows the new files.
+6. Unplug the cable when you are done, or eject the Kindle on the computer. The transfer ends by itself, and the file browser refreshes and shows the new files.
 
 Other entries in the same menu:
 
 | Entry | What it does |
 |---|---|
 | Start when plugged in | When checked, plugging in a cable while the file browser is open starts a transfer by itself, 2 seconds after KOReader reports charging. Off by default, because KOReader reports a wall charger the same way as a computer. On a wall charger the transfer ends by itself after 20 seconds without showing an error. |
+| Show transfer dialog | Off by default. When checked, a dialog covers the screen during the transfer ("Waiting for the computer…", then "Connected…") with a **Stop transfer** button. Without it the transfer stops on unplug, on eject, after 20 seconds without a computer, on sleep, when the file browser closes, and when a book is opened. |
 | Reset the USB responder | Asks for confirmation, then restarts `tizen-mtp` (`restart mtp`) and unbinds the USB gadget. Use it when the computer no longer sees the Kindle, or after KOReader crashed during a transfer. |
 | About | Shows the 7 device checks and whether each one passed. |
 
 If no computer answers within 20 seconds of Start, the plugin stops and says so.
 
+### Kindles that use USB mass storage (firmware 5.19.2)
+
+Some Kindles on 5.19.2 have no MTP at all: no `/usr/bin/mtp.sh`, no `mtpgadget` and no `tizen-mtp`. They export the userstore (`vfat`, `/dev/loop/0`) through the kernel's `g_mass_storage` gadget instead. When the plugin finds no `mtp.sh` but finds a `lun0/file` in `/sys/devices/platform/*/gadget/` and `/dev/loop/0`, it writes the loop device to `lun0/file` to start, and clears it, runs `sync` and remounts `/mnt/base-us` to stop. Reported in [issue #3](https://github.com/danihrndzld/kindlemtp.koplugin/issues/3).
+
 ## What is blocked during a transfer, and why
 
-- **Opening books.** Start is only available in the file browser, and the transfer dialog cannot be dismissed, so no book can be opened while the computer has access. KOReader rewrites a book's settings file (`.sdr/metadata.*.lua`) whenever it saves; if a book were open, it could overwrite changes made from the computer.
-- **The rest of KOReader's interface.** The dialog covers the menus for the whole transfer. Tap **Stop transfer** to get them back.
+- **Opening books.** Start is only available in the file browser, and a transfer stops as soon as a book is opened, so no book stays open while the computer has access. KOReader rewrites a book's settings file (`.sdr/metadata.*.lua`) whenever it saves; if a book were open, it could overwrite changes made from the computer.
+- **The rest of KOReader's interface.** With **Show transfer dialog** on, the dialog covers the menus for the whole transfer. Tap **Stop transfer** to get them back.
 - **Sleep.** The plugin turns the screensaver off (`preventScreenSaver`) and pauses KOReader's auto-suspend, because the Kindle could otherwise go to sleep in the middle of a copy while charging. Both settings go back to what they were when you stop. If you use the KeepAlive plugin, its setting is kept.
 
 Before starting, the plugin asks KOReader to write all its settings to disk, so the files the computer sees are current.

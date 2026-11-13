@@ -16,13 +16,14 @@ local function connect(k, e)
 end
 
 describe("main.lua", function()
-    it("AC-11 Start flushes settings first, keeps the device awake, shows the dialog and polls every 250 ms", function()
+    it("AC-11 Start flushes settings first, keeps the device awake, shows no dialog and polls every 250 ms", function()
         local k, e = start({ keepalive = false })
         local flushed_at = tonumber(k.log[1]:match("^flush at call (%d+)$"))
         for i = 1, flushed_at do
             assert.are_not.equal("set", e.calls[i].kind) -- only probe reads before the flush
         end
-        assert.are.equal("show ButtonDialog Waiting for the computer…", k.log[2])
+        assert.are.equal(1, #k.log)
+        assert.is_false(k.has("show ButtonDialog"))
         assert.are.equal("waiting_host", k.core.state)
         assert.is_true(k.share.pause_auto_suspend)
         assert.is_true(k.share.keepalive)
@@ -31,20 +32,52 @@ describe("main.lua", function()
         assert.are.equal(1, e.count("startMtp"))
     end)
 
-    it("AC-12 connected, then Stop: dialog closes, settings restored, browser refreshed, polling ends", function()
+    it("AC-12 connected, then unplugged: settings restored, browser refreshed, polling ends, no dialog", function()
         local k, e = start({ keepalive = false })
         connect(k, e)
-        assert.are.equal("title Connected. Your computer can see the Kindle's files.", k.log[#k.log])
+        assert.is_false(k.has("show ButtonDialog"))
+        assert.are.equal("connected", k.core.state)
         assert.are.equal(1, #k.scheduled)
-        k.top.buttons[1][1].callback()
+        e.is_charging, e.t = false, 1.5
+        k.run_next()
         assert.are.equal("idle", k.core.state)
-        assert.are.equal("close ButtonDialog", k.log[#k.log])
         assert.is_nil(k.share.pause_auto_suspend)
         assert.is_false(k.share.keepalive)
         -- Only the refresh is left, 1 s later (fsp lag); the poll is gone.
         assert.are.equal(1, #k.scheduled)
         assert.are.equal(1, k.run_next())
         assert.are.equal("refreshPath", k.log[#k.log])
+        assert.are.equal(0, #k.scheduled)
+    end)
+
+    it("AC-23 with Show transfer dialog on, the dialog opens, says Connected and Stop ends the transfer", function()
+        local k, e = start({ keepalive = false, show_dialog = true })
+        assert.are.equal("show ButtonDialog Waiting for the computer…", k.log[2])
+        connect(k, e)
+        assert.are.equal("title Connected. Your computer can see the Kindle's files.", k.log[#k.log])
+        k.top.buttons[1][1].callback()
+        assert.are.equal("idle", k.core.state)
+        assert.are.equal("close ButtonDialog", k.log[#k.log])
+        assert.are.equal(1, #k.scheduled) -- only the delayed refresh
+    end)
+
+    it("AC-24 the Show transfer dialog entry toggles kindlemtp_show_dialog", function()
+        local _, k = S.load()
+        local item = k.instance().menu.sub_item_table[3]
+        assert.are.equal("Show transfer dialog", item.text)
+        assert.is_false(item.checked_func())
+        item.callback()
+        assert.is_true(item.checked_func())
+    end)
+
+    it("AC-25 opening a book during a background transfer stops it", function()
+        local k, e = start()
+        connect(k, e)
+        k.ReaderUI.instance = {}
+        e.t = 1
+        k.run_next()
+        assert.are.equal("idle", k.core.state)
+        assert.is_false(k.has("refreshPath"))
         assert.are.equal(0, #k.scheduled)
     end)
 
@@ -158,7 +191,7 @@ describe("main.lua", function()
     it("AC-16 Reset shows Resetting and repaints before restart mtp runs", function()
         local _, k, e = S.load()
         local fm = k.instance()
-        fm.menu.sub_item_table[3].callback()
+        fm.menu.sub_item_table[4].callback()
         local n = #e.calls
         k.top.ok_callback()
         assert.is_true(k.has("show InfoMessage Resetting…"))
@@ -177,11 +210,11 @@ describe("main.lua", function()
         assert.are.equal(0, e.count("isMtpStarted"))
     end)
 
-    it("AC-19 the menu sits under Network with 4 entries", function()
+    it("AC-19 the menu sits under Network with 5 entries", function()
         local _, k = S.load()
         local menu = k.instance().menu
         assert.are.equal("network", menu.sorting_hint)
         assert.are.equal("USB file transfer (MTP)", menu.text)
-        assert.are.equal(4, #menu.sub_item_table)
+        assert.are.equal(5, #menu.sub_item_table)
     end)
 end)

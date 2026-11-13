@@ -49,6 +49,16 @@ M = [
  ("M63", "5.19: helper failure on start ignored", '        local _, ok = self:sh(sq(self.env.ipcf) .. " " .. what)\n        return ok', '        self:sh(sq(self.env.ipcf) .. " " .. what)\n        return true'),
  ("M64", "5.19: no rebind grace after connecting", 'now - self.connected_at >= M.REBIND_GRACE', 'true'),
  ("M65", "5.19: rebind grace never ends", 'now - self.connected_at >= M.REBIND_GRACE', 'false'),
+ ('M66', '5.19: UDC fallback needs isMtpStarted 1 (never true on 5.19)', 'return self.udc_seen and (started == 1 or self.mode == "ipcf")', 'return self.udc_seen and started == 1'),
+ ('M67', 'UMS: lun0/file never written on start', '        if not env.write(self:ums_lun(), M.LOOP_DEV .. "\\n") then', '        if false then'),
+ ('M68', 'UMS: lun0/file not emptied on stop', '        env.write(self:ums_lun(), "\\n")\n', ''),
+ ('M69', 'UMS: vfat cache not refreshed on stop', '        self:sh(M.UMS_FLUSH)\n', ''),
+ ('M70', 'UMS: loop device not required', 'self.env.exists(M.MTP_SH) and self:ums_lun() ~= nil', 'self:ums_lun() ~= nil'),
+ ('M71', 'UMS: lun0/file wins over mtp.sh', 'not self.env.exists(M.MTP_SH) and self:ums_lun() ~= nil', 'self:ums_lun() ~= nil'),
+ ('M72', 'UMS: host never detected', '        if self:udc_configured() then\n            self.state, self.connected_at = "connected", now', '        if false then\n            self.state, self.connected_at = "connected", now'),
+ ('M73', 'UMS: eject not detected', 'self.last_started = 0', 'self.last_started = 1'),
+ ('M74', 'Unplug is not checked by poll', 'if not self:cable_in() then\n            self:log("info", "cable unplugged, stopping")', 'if false then\n            self:log("info", "cable unplugged, stopping")'),
+ ('M75', 'UMS: probe still demands the MTP responder', 'ums or M.first_pid(self:sh("pidof tizen-mtp")) ~= nil', 'M.first_pid(self:sh("pidof tizen-mtp")) ~= nil'),
  ("M26", "Host check after the timeout check", None, None),
 ]
 MAIN = "kindlemtp.koplugin/main.lua"
@@ -76,6 +86,8 @@ M += [
  ("M56", "sync duration not logged", '    self:log("info", string.format("sync took %.2f s", env.now() - t0))\n', ''),
  ("M46", "Failed liblipclua read gives up instead of using lipc-get-prop", 'if ok and tonumber(v) then return tonumber(v) end', 'do return ok and tonumber(v) or nil end'),
  ("M47", "Failed liblipclua write gives up instead of using lipc-set-prop", 'if h and pcall(h.set_int_property, h, pub, prop, value) then return true end', 'if h then return (pcall(h.set_int_property, h, pub, prop, value)) end'),
+ ('M76', 'Transfer dialog shown regardless of the setting', 'if G_reader_settings:isTrue("kindlemtp_show_dialog") then', 'if true then', MAIN),
+ ('M77', 'Book opened during a background transfer is ignored', 'if core:active() and isBookOpen() then', 'if false then', MAIN),
 ]
 env = dict(os.environ)
 res = []

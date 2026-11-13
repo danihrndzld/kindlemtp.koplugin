@@ -30,6 +30,9 @@ M.SYSLOG = "/var/log/messages"
 M.BUS = "com.lab126.mtp" -- lipc publisher and D-Bus name owned by tizen-mtp
 M.POWERD = "com.lab126.powerd"
 M.MTP_TMP = "/mnt/base-us/.mtp-tmp" -- tizen-mtp writes here first, then renames into place
+M.LOOP_DEV = "/dev/loop/0" -- vfat userstore backing device on UMS Kindles (including 5.19.2)
+M.LUN_CMD = "ls /sys/devices/platform/*/gadget/lun0/file 2>/dev/null"
+M.UMS_FLUSH = "echo 3 > /proc/sys/vm/drop_caches 2>/dev/null; mount -o remount /mnt/base-us 2>/dev/null"
 -- One shell call for the cable test: UDC states, then "<type> <online>" for every power supply.
 M.CABLE_CMD = [[cat /sys/class/udc/*/state 2>/dev/null; echo @@; for d in /sys/class/power_supply/*; do echo "$(cat "$d/type" 2>/dev/null) $(cat "$d/online" 2>/dev/null)"; done]]
 
@@ -145,13 +148,33 @@ function M:sh(cmd)
     return out or "", ok
 end
 
---- How to command the responder: "lipc" (5.16 to 5.18) or "ipcf" (5.19 on, where tizen-mtp registers
---- no lipc properties and takes startMtpAsync/stopMtpAsync over IPCF4 through bin/kindlemtp-ipcf).
+--- On 5.19.2 Kindles with a vfat userstore, there is no tizen-mtp or mtp.sh; the kernel's
+--- g_mass_storage gadget exports /dev/loop/0 through its sysfs lun0/file.
+function M:ums_lun()
+    if self.lun == nil then
+        local path = trim(self:sh(M.LUN_CMD)):match("^([^\n]+)")
+        self.lun = (path and path ~= "" and self.env.exists(M.LOOP_DEV)) and path or false
+    end
+    return self.lun or nil
+end
+
+--- UMS Kindle: no mtp.sh, but a g_mass_storage lun0/file and its backing loop device. Cached.
+function M:is_ums()
+    if self.ums == nil then
+        self.ums = not self.env.exists(M.MTP_SH) and self:ums_lun() ~= nil
+    end
+    return self.ums
+end
+
+--- How to command USB transfer: "ums" (5.19.2 vfat Kindles with g_mass_storage lun0/file),
+--- "lipc" (5.16 to 5.18) or "ipcf" (5.19 on with tizen-mtp over IPCF4 through bin/kindlemtp-ipcf).
 --- The helper's ping answers fast on both: "no_ipcn" when libipcn is missing (5.18), "ok" on 5.19.
 --- Both answers are cached; a failed ping is not, so the next call asks again.
 function M:control()
     if not self.mode then
-        if not self.env.ipcf then
+        if self:is_ums() then
+            self.mode = "ums"
+        elseif not self.env.ipcf then
             self.mode = "lipc"
         else
             local out, ok = self:sh(sq(self.env.ipcf) .. " ping")
@@ -163,10 +186,13 @@ function M:control()
     return self.mode or "lipc"
 end
 
---- 1 when the responder runs MTP, 0 when not, nil when it can't be asked. On 5.19 nothing reports
---- the responder state, so the gadget's UDC binding stands in for it (bound in states 1 and 3).
+--- 1 when the transfer runs, 0 when not, nil when it can't be asked. On UMS Kindles lun0/file holds
+--- /dev/loop/0 while exported; on 5.19 MTP the gadget's UDC binding stands in for isMtpStarted.
 function M:started()
-    if self:control() == "ipcf" then
+    local mode = self:control()
+    if mode == "ums" then
+        return trim(self.env.read(self:ums_lun())) ~= "" and 1 or 0
+    elseif mode == "ipcf" then
         return trim(self.env.read(M.GADGET .. "/UDC")) ~= "" and 1 or 0
     end
     return self.env.lipc.get_int(M.BUS, "isMtpStarted")
@@ -197,13 +223,15 @@ end
 --- `skip_lipc` leaves out the lipc check (it can block up to 10 s), counting it as passed.
 function M:probe(is_kindle, skip_lipc)
     local env = self.env
+    local mtp_sh = env.exists(M.MTP_SH) == true
+    local ums = not mtp_sh and self:ums_lun() ~= nil
     local checks = {
         { "not_kindle", is_kindle == true },
-        { "no_mtp_sh", env.exists(M.MTP_SH) == true },
-        { "no_gadget", env.exists(M.GADGET) == true },
-        { "no_responder", M.first_pid(self:sh("pidof tizen-mtp")) ~= nil },
-        { "no_dbus_send", env.exists(M.DBUS_SEND) == true },
-        { "no_lipc", skip_lipc == true or self:started() ~= nil },
+        { "no_mtp_sh", mtp_sh or ums },
+        { "no_gadget", ums or env.exists(M.GADGET) == true },
+        { "no_responder", ums or M.first_pid(self:sh("pidof tizen-mtp")) ~= nil },
+        { "no_dbus_send", ums or env.exists(M.DBUS_SEND) == true },
+        { "no_lipc", ums or skip_lipc == true or self:started() ~= nil },
         { "volumd_running", not self:volumd_running() },
     }
     local result = { ok = true, checks = {} }
@@ -298,6 +326,18 @@ function M:start()
         return nil, "marker_failed"
     end
     -- From here on a failure tears down and removes our marker (fail -> stop).
+    if self:is_ums() then
+        self:sh("sync")
+        if not env.write(self:ums_lun(), M.LOOP_DEV .. "\n") then
+            return self:fail("ums_export_failed")
+        end
+        self.saved_pss = stale_plugin and 0 or (env.lipc.get_int(M.POWERD, "preventScreenSaver") or 0)
+        env.lipc.set_int(M.POWERD, "preventScreenSaver", 1)
+        self.started_at, self.lipc_at = env.now(), nil
+        self.state = "waiting_host"
+        self:log("info", "waiting for host over UMS (" .. self:ums_lun() .. ")")
+        return true
+    end
     self.dest = self:bus_name()
     if not self.dest then return self:fail("bus_name_not_found") end
     -- Reset, as in the recipe: leaves the responder in state 4.
@@ -335,7 +375,7 @@ function M:host_configured(started)
         self.udc_seen = true
         return false
     end
-    return self.udc_seen and started == 1
+    return self.udc_seen and (started == 1 or self.mode == "ipcf")
 end
 
 --- Called every POLL_INTERVAL. Returns an event when something changed:
@@ -353,6 +393,15 @@ function M:poll()
     local now = self.env.now()
     if not self.lipc_at or now - self.lipc_at >= M.LIPC_INTERVAL then
         self.lipc_at, self.last_started = now, self:started()
+        -- No dialog to tap: an unplugged cable ends the transfer by itself.
+        if not self:cable_in() then
+            self:log("info", "cable unplugged, stopping")
+            self:stop()
+            return "unplugged"
+        end
+        if self.mode == "ums" and self.state == "connected" and not self:udc_configured() then
+            self.last_started = 0
+        end
     end
     local started = self.last_started
     -- On 5.19 started is the UDC binding, which drops while the host configures (state 2) and
@@ -365,7 +414,13 @@ function M:poll()
     end
     if self.state == "connected" then return nil end
 
-    if self:host_configured(started) then
+    if self.mode == "ums" then
+        if self:udc_configured() then
+            self.state, self.connected_at = "connected", now
+            self:log("info", "host configured USB (UMS)")
+            return "connected"
+        end
+    elseif self:host_configured(started) then
         local _, ok = self:sh(M.DBUS_SEND .. " --system --dest=" .. self.dest
             .. " --type=signal /default com.lab126.volumd.driveModeStateChanged int32:1")
         if not ok then
@@ -388,18 +443,26 @@ end
 function M:stop()
     local env = self.env
     self.state = "stopping"
-    self:mtp("stop")
-    -- stopMtp from state 3 does not unbind the UDC.
-    self:sh(M.MTP_SH .. " udc disable")
-    -- tizen-mtp never fsyncs; flush just-copied books before the user unplugs or sleeps.
-    local t0 = env.now()
-    self:sh("sync")
-    self:log("info", string.format("sync took %.2f s", env.now() - t0))
+    if self:control() == "ums" then
+        env.write(self:ums_lun(), "\n")
+        local t0 = env.now()
+        self:sh("sync")
+        self:sh(M.UMS_FLUSH)
+        self:log("info", string.format("sync took %.2f s", env.now() - t0))
+    else
+        self:mtp("stop")
+        -- stopMtp from state 3 does not unbind the UDC.
+        self:sh(M.MTP_SH .. " udc disable")
+        -- tizen-mtp never fsyncs; flush just-copied books before the user unplugs or sleeps.
+        local t0 = env.now()
+        self:sh("sync")
+        self:log("info", string.format("sync took %.2f s", env.now() - t0))
+    end
     local marker = M.parse_marker(env.read(M.MARKER))
     self:restore_keep_awake(marker ~= nil and marker.owner == "plugin")
     env.remove(M.MARKER)
     -- Leftovers of an interrupted transfer. Only with the responder stopped and no new marker claimed.
-    if self:started() == 0 and not env.read(M.MARKER) then
+    if self.mode ~= "ums" and self:started() == 0 and not env.read(M.MARKER) then
         self:sh("rm -rf " .. M.MTP_TMP)
     end
     self.state = "idle"
@@ -408,6 +471,10 @@ end
 
 --- Restarts a wedged responder, then stops.
 function M:reset()
+    if self:control() == "ums" then
+        self:stop()
+        return true
+    end
     local _, ok = self:sh("restart mtp")
     self:stop()
     if not ok then return nil, "restart_failed" end
