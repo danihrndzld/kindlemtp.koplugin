@@ -1,0 +1,2 @@
+/sys/devices/platform/11211000.usb/gadget/lun0/file
+

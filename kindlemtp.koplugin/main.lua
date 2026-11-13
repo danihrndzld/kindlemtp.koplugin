@@ -41,6 +41,10 @@ end
 -- Firmware 5.19 on: the IPCF4 helper next to this file. Zip installs may drop the exec bit.
 local IPCF = (debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$") or ".") .. "/bin/kindlemtp-ipcf"
 os.execute("chmod +x '" .. IPCF .. "' 2>/dev/null")
+-- The userstore can be mounted noexec (5.19.2): run a copy from tmpfs when the original cannot run.
+os.execute("cp '" .. IPCF .. "' /var/tmp/kindlemtp-ipcf 2>/dev/null && chmod +x /var/tmp/kindlemtp-ipcf 2>/dev/null"
+    .. " && [ ! -x '" .. IPCF .. "' -o -x /var/tmp/kindlemtp-ipcf ]")
+if io.open("/var/tmp/kindlemtp-ipcf", "rb") then IPCF = "/var/tmp/kindlemtp-ipcf" end
 
 local core = Mtp.new(Mtp.posix_env{
     ipcf = IPCF,
@@ -63,6 +67,7 @@ local REASONS = {
     owner_other = _("Another app (KOBridge) is running a USB transfer. Stop it there first."),
     bus_name_not_found = _("Could not find the MTP responder on D-Bus."),
     startmtp_failed = _("The MTP responder refused startMtp."),
+    ums_export_failed = _("Could not hand the userstore to the USB mass storage gadget (lun0/file)."),
     marker_failed = _("Could not create /tmp/kindlemtp.active."),
     signal_failed = _("dbus-send failed to switch the responder to drive mode."),
     restart_failed = _("Restarting the MTP responder (restart mtp) failed."),
@@ -84,6 +89,11 @@ local probe_result = core:probe(true, true)
 logger.info("kindlemtp: probe at load:", probe_result.ok and "ok" or probe_result.reason)
 
 local dialog, auto_started, saved_share, tick
+
+local function isBookOpen()
+    local ok, ReaderUI = pcall(require, "apps/reader/readerui")
+    return ok and ReaderUI ~= nil and ReaderUI.instance ~= nil
+end
 
 local function showReason(reason)
     UIManager:show(InfoMessage:new{
@@ -134,7 +144,11 @@ end
 
 tick = function()
     local event, reason = core:poll()
-    if core:active() then
+    if core:active() and isBookOpen() then
+        logger.info("kindlemtp: book opened during transfer, stopping")
+        core:stop()
+        finish(nil, true)
+    elseif core:active() then
         if event == "connected" and dialog then
             dialog:setTitle(_("Connected. Your computer can see the Kindle's files."))
         end
@@ -166,18 +180,22 @@ local function startTransfer(ui, auto)
         return refuse(err)
     end
     auto_started = auto
-    dialog = ButtonDialog:new{
-        title = _("Waiting for the computer…"),
-        dismissable = false,
-        buttons = {{{
-            text = _("Stop transfer"),
-            callback = function()
-                core:stop()
-                finish()
-            end,
-        }}},
-    }
-    UIManager:show(dialog)
+    -- By default there is no dialog: the transfer runs in the background and ends on unplug,
+    -- eject, timeout or sleep. "Show transfer dialog" brings back the status box with Stop.
+    if G_reader_settings:isTrue("kindlemtp_show_dialog") then
+        dialog = ButtonDialog:new{
+            title = _("Waiting for the computer…"),
+            dismissable = false,
+            buttons = {{{
+                text = _("Stop transfer"),
+                callback = function()
+                    core:stop()
+                    finish()
+                end,
+            }}},
+        }
+        UIManager:show(dialog)
+    end
     UIManager:unschedule(tick)
     UIManager:scheduleIn(Mtp.POLL_INTERVAL, tick)
 end
@@ -241,6 +259,14 @@ function KindleMTP:addToMainMenu(menu_items)
                 help_text = _("Starts the transfer when a cable is plugged in while the file browser is open. KOReader cannot tell a computer from a wall charger, so on a charger the transfer stops by itself after 20 seconds."),
                 callback = function()
                     G_reader_settings:flipNilOrFalse("kindlemtp_autostart")
+                end,
+            },
+            {
+                text = _("Show transfer dialog"),
+                checked_func = function() return G_reader_settings:isTrue("kindlemtp_show_dialog") end,
+                help_text = _("Off by default: the transfer runs in the background and stops when the cable is unplugged. When checked, a box with a Stop transfer button covers the screen during the transfer."),
+                callback = function()
+                    G_reader_settings:flipNilOrFalse("kindlemtp_show_dialog")
                 end,
                 separator = true,
             },

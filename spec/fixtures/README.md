@@ -19,3 +19,4 @@ Captured on a Kindle Paperwhite, firmware 5.18.5, unless marked synthetic.
 | `power_supply_unplugged.txt` | Captured 2026-10-16 with the cable out (isCharging 0, battery Discharging, UDC `not attached`): `type` and `online` of `bd71827_bat` (Battery, 1), `max20342_moisture` (USB_WET, 1), `bd71827_ac` (Mains, 0), `Wireless` (Wireless, 0), one line each as `kindlemtp_core.CABLE_CMD` prints them |
 | `power_supply_ac_online.txt` | **Synthetic**: the capture above with `bd71827_ac` online=1 |
 | `udc_tape_charger.txt` | **Synthetic**: no charger-only capture yet |
+| `ums_5192_lun.txt` | Captured 2026-11-12 on a Kindle running firmware 5.19.2 (kernel 4.9.77-lab126, `vfat` `/dev/loop/0`, `g_mass_storage`): `lun0/file` path under `/sys/devices/platform/11211000.usb` |

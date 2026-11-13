@@ -60,6 +60,7 @@ function F.new()
         lipc_dead = false,
         ipcf = nil, -- helper path; nil = no helper (lipc only)
         ipcf_answer = "ok", -- "ok", "no_ipcn" (5.18) or "fail"
+        lun = nil, -- g_mass_storage lun0/file path; nil = not a UMS Kindle
     }
 
     local function rec(kind, text)
@@ -130,6 +131,12 @@ function F.new()
             return "", true
         end
         if cmd == "rm -rf " .. Mtp.MTP_TMP then
+            return "", true
+        end
+        if cmd == Mtp.LUN_CMD then
+            return e.lun and (e.lun .. "\n") or "", e.lun ~= nil
+        end
+        if cmd == Mtp.UMS_FLUSH then
             return "", true
         end
         error("unexpected command: " .. cmd)
@@ -216,6 +223,17 @@ function F.new()
     end
 
     return e
+end
+
+--- A Kindle 5.19.2 as captured in issue #3: no mtp.sh, gadget or tizen-mtp, vfat userstore on
+--- /dev/loop/0 exported through the g_mass_storage lun0/file.
+F.LUN = "/sys/devices/platform/11211000.usb/gadget/lun0/file"
+function F.ums(e)
+    e.exists_set[Mtp.MTP_SH], e.exists_set[Mtp.GADGET] = nil, nil
+    e.exists_set[Mtp.LOOP_DEV] = true
+    e.pids["tizen-mtp"] = nil
+    e.lun = F.LUN
+    e.contents[F.LUN] = "\n"
 end
 
 --- A core attached to a fresh fake env.
